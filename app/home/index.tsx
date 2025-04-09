@@ -79,7 +79,7 @@ export default function explore() {
           data={[3900, 600, 950, 500, 1900, 900, 2900]}
         /> */}
           <Button
-            title="reset"
+            title="reset 363"
             onPress={() => AsyncStorage.removeItem("isFirstInstall")}
           />
 
