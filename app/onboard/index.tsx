@@ -1,10 +1,19 @@
-import { View, Text, Button, StyleSheet, Dimensions, ImageBackground, Image, FlatList, TouchableOpacity, NativeSyntheticEvent, NativeScrollEvent,  } from "react-native";
+import {
+  View,
+  Text,
+  Button,
+  StyleSheet,
+  Dimensions,
+  ImageBackground,
+  Image,
+  FlatList,
+  TouchableOpacity,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from "react-native";
 import React, { useRef, useState } from "react";
-import { AppDispatch } from "../../store/globalStore";
-import { useDispatch } from "react-redux";
-import { resetFirstInstall } from "../../store/globalAction";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-
 
 const { width, height } = Dimensions.get("window");
 
@@ -12,11 +21,12 @@ const slides = [
   {
     key: "1",
     description: "Ứng dụng quản lý hàng hóa bằng mã vạch tiện lợi",
-    image: require("../../assets/images/onbroading1.png"), 
+    image: require("../../assets/images/onbroading1.png"),
   },
   {
     key: "2",
-    description: "Ứng dụng còn giúp nhập hàng tiện lợi và theo dõi kho chính xác",
+    description:
+      "Ứng dụng còn giúp nhập hàng tiện lợi và theo dõi kho chính xác",
     image: require("../../assets/images/onbroading2.png"),
   },
   {
@@ -33,14 +43,14 @@ const slides = [
 
 export default function Onboarding() {
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentIndex < slides.length - 1) {
-      flatListRef.current?.scrollToIndex({index: currentIndex + 1 });
+      flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
-      router.replace("/home")
+      await AsyncStorage.setItem("isFirstInstall", "false");
+      router.replace("/home");
     }
   };
 
@@ -50,20 +60,19 @@ export default function Onboarding() {
     setCurrentIndex(index);
   };
 
-  const renderItem = ({ item }: { item: typeof slides[0] }) => (
+  const renderItem = ({ item }: { item: (typeof slides)[0] }) => (
     <View style={styles.slides}>
-      <Image source={item.image}/>
+      <Image source={item.image} />
       <Text style={styles.subtitle}>{item.description}</Text>
     </View>
   );
   return (
     <View style={styles.container}>
-
       <ImageBackground
-        source={require('../../assets/images/Header.png')}
-        style={styles.banner}   
+        source={require("../../assets/images/Header.png")}
+        style={styles.banner}
       >
-        <Text  style={styles.title}>Welcome to BKGrocery</Text>
+        <Text style={styles.title}>Welcome to BKGrocery</Text>
       </ImageBackground>
       <FlatList
         ref={flatListRef}
@@ -96,31 +105,39 @@ export default function Onboarding() {
           />
         ))}
       </View>
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5fddc',  },
-  header: { height: height * 0.2},
+  container: { flex: 1, backgroundColor: "#f5fddc" },
+  header: { height: height * 0.2 },
   banner: {
     width: width,
-    height: height*0.2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
+    height: height * 0.2,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
   },
   title: {
     fontSize: 36,
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
   },
-  subtitle: { fontSize: 24, fontWeight: 'bold', color: '#365314', textAlign: 'center',},
-  slides: {width, padding: 20, alignItems: "center", marginTop: 20},
-  indicator : {flexDirection: "row", justifyContent: "center", marginBottom: 10 },
-  button: { 
+  subtitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#365314",
+    textAlign: "center",
+  },
+  slides: { width, padding: 20, alignItems: "center", marginTop: 20 },
+  indicator: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  button: {
     backgroundColor: "#4caf50",
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -128,6 +145,5 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 40,
   },
-  buttonText: { color: "white", fontWeight: "bold" , },
-
+  buttonText: { color: "white", fontWeight: "bold" },
 });

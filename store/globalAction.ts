@@ -2,32 +2,23 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import UserInfo from "../types/UserInfo";
+
 export const setupApp = createAsyncThunk<
-  boolean | undefined,
+  UserInfo | undefined,
   void,
   { rejectValue: Error }
->("getIsFirstInstall", async () => {
+>("setupApp", async () => {
   try {
-    const isFirstInstall = await AsyncStorage.getItem("isFirstInstall");
-    if (isFirstInstall === null) {
-      await AsyncStorage.setItem("isFirstInstall", "true");
-      return true;
+    const userInfoStr = await AsyncStorage.getItem("userInfo");
+    const userInfo: UserInfo | null = userInfoStr ? JSON.parse(userInfoStr) : null;
+    if (userInfo === null) {
+      await AsyncStorage.setItem("userInfo", "");
+      return undefined;
     } else {
-      return false;
+      return userInfo;
     }
   } catch (error) {
     console.error("Error fetching books:", error);
-  }
-});
-
-export const resetFirstInstall = createAsyncThunk<
-  void | undefined,
-  void,
-  { rejectValue: Error }
->("resetFirstInstall", async () => {
-  try {
-    await AsyncStorage.removeItem("isFirstInstall");
-  } catch (error) {
-    console.error("Error resetting first install:", error);
   }
 });
