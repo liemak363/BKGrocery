@@ -1,16 +1,21 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-import { setupApp, resetFirstInstall } from "./globalAction";
+import { setupApp } from "./globalAction";
+
+import UserInfo from "../types/UserInfo";
 
 export interface GlobalState {
-  isFirstInstall: boolean;
   isSetupLoading: boolean;
+  userInfo: UserInfo;
 }
 
 const initialState: GlobalState = {
-  isFirstInstall: true,
   isSetupLoading: true,
+  userInfo: {
+    name: "",
+    email: "",
+  }
 };
 
 export const globalSlice = createSlice({
@@ -32,14 +37,13 @@ export const globalSlice = createSlice({
 
     builder.addCase(
       setupApp.fulfilled,
-      (state, action: PayloadAction<boolean | undefined>) => {
-        state.isFirstInstall = action.payload ?? false;
+      (state, action: PayloadAction<UserInfo | undefined>) => {
+        if (action.payload) {
+          state.userInfo = action.payload;
+        }
         state.isSetupLoading = false;
       }
     );
-    builder.addCase(resetFirstInstall.fulfilled, (state) => {
-      state.isFirstInstall = true;
-    });
   },
 });
 
