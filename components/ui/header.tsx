@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const Header = () => {
@@ -22,6 +22,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
+    paddingTop: StatusBar.currentHeight,
     // borderBottomLeftRadius: 20,
     // borderBottomRightRadius: 20,
   },

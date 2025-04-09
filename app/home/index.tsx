@@ -8,6 +8,8 @@ import {
   Image,
   Button,
   StatusBar,
+  SafeAreaView,
+  Platform,
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 
@@ -32,7 +34,7 @@ export default function explore() {
   };
 
   return (
-    <View>
+    <View style={{ flex: 1 }}>
       <ScrollView style={styles.container}>
         {/* Làm trong suốt thanh trạng thái */}
         <StatusBar
@@ -76,6 +78,10 @@ export default function explore() {
           changeLabel="VS LAST WEEK"
           data={[3900, 600, 950, 500, 1900, 900, 2900]}
         /> */}
+          {/* <Button
+            title="reset"
+            onPress={() => AsyncStorage.removeItem("isFirstInstall")}
+          /> */}
 
           <View style={{ marginBottom: 100 }}>
             <Text style={styles.mainFeatureTitle}>Main feature</Text>
@@ -114,10 +120,6 @@ export default function explore() {
           </View>
         </View>
       </ScrollView>
-      {/* <Button
-        title="reset"
-        onPress={() => AsyncStorage.removeItem("isFirstInstall")}
-      /> */}
       <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </View>
   );
@@ -126,7 +128,7 @@ export default function explore() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#ECFCCB",
-    flex: 1,
+    // flex: 1,
   },
   subcontainer: {
     backgroundColor: "#ECFCCB",
