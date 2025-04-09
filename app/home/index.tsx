@@ -8,7 +8,7 @@ import { useDispatch } from "react-redux";
 import Header from '@/components/ui/header';
 import UserInfoCard from '@/components/ui/UserInfo';
 import InfoCard from '@/components/ui/InfoCard';
-import WeeklyRevenueCard from '@/components/ui/WeeklyRevenueCard';
+// import WeeklyRevenueCard from '@/components/ui/WeeklyRevenueCard';
 import FeatureItem from '@/components/ui/FeatureItem';
 import BottomNavBar from '@/components/ui/BottomNavBar';
 
@@ -59,13 +59,13 @@ export default function explore() {
           </View>
         </View>
 
-        <WeeklyRevenueCard
+        {/* <WeeklyRevenueCard
           title="Week’s Revenue"
           total="16,345 $"
           percentageChange="1.3%"
           changeLabel="VS LAST WEEK"
           data={[3900, 600, 950, 500, 1900, 900, 2900]}
-        />
+        /> */}
 
       <View style={{marginBottom: 100}}>
         <Text style={styles.mainFeatureTitle}>Main feature</Text>
@@ -92,6 +92,7 @@ export default function explore() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#ECFCCB',
+    flex: 1
   },
   subcontainer: {
     backgroundColor: '#ECFCCB',
