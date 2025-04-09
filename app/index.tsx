@@ -22,7 +22,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!isSetupLoading) {
-      if (isFirstInstall) router.replace("/onboard");
+      if (isFirstInstall) router.replace("/home");
       else router.replace("/home");
     }
   }, [isSetupLoading, isFirstInstall]);
