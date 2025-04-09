@@ -2,6 +2,7 @@ import {
   View,
   Text,
   Button,
+  StatusBar,
   StyleSheet,
   Dimensions,
   ImageBackground,
@@ -68,6 +69,12 @@ export default function Onboarding() {
   );
   return (
     <View style={styles.container}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent
+      />
+
       <ImageBackground
         source={require("../../assets/images/Header.png")}
         style={styles.banner}
@@ -118,6 +125,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
+    paddingTop: StatusBar.currentHeight,
   },
   title: {
     fontSize: 36,

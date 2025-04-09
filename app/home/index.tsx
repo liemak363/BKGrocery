@@ -78,10 +78,10 @@ export default function explore() {
           changeLabel="VS LAST WEEK"
           data={[3900, 600, 950, 500, 1900, 900, 2900]}
         /> */}
-          {/* <Button
+          <Button
             title="reset"
             onPress={() => AsyncStorage.removeItem("isFirstInstall")}
-          /> */}
+          />
 
           <View style={{ marginBottom: 100 }}>
             <Text style={styles.mainFeatureTitle}>Main feature</Text>
