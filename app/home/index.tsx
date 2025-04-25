@@ -24,7 +24,7 @@ import InfoCard from "@/components/ui/InfoCard";
 import FeatureItem from "@/components/ui/FeatureItem";
 import BottomNavBar from "@/components/ui/BottomNavBar";
 
-export default function explore() {
+export default function Explore() {
   const dispatch = useDispatch<AppDispatch>();
 
   const [activeTab, setActiveTab] = useState("Home");

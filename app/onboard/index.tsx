@@ -15,6 +15,7 @@ import {
 import React, { useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import Header from "@/components/ui/header";
 
 const { width, height } = Dimensions.get("window");
 
@@ -75,12 +76,7 @@ export default function Onboarding() {
         translucent
       />
 
-      <ImageBackground
-        source={require("../../assets/images/Header.png")}
-        style={styles.banner}
-      >
-        <Text style={styles.title}>Welcome to BKGrocery</Text>
-      </ImageBackground>
+      <Header />
       <FlatList
         ref={flatListRef}
         data={slides}
