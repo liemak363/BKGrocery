@@ -15,9 +15,9 @@ import {
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import Header from "@/components/ui/header";
 import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 
-
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -25,19 +25,50 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const handleLogin = () => {
+  const handleLogin = async () => {
+
+    console.log("HIHIHI")
+
     if (!email || !password) {
       setErrorMessage("Vui lòng nhập đủ thông tin");
       return;
     }
 
-    if (email !== "admin@example.com" || password !== "123456") {
-      setErrorMessage("Đăng nhập không thành công, xin thử lại");
-      return;
+    try {
+      const res = await fetch('https://bkgrocery-be.onrender.com/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: email,
+          password: password,
+        }),
+      });
+
+      if(res.status == 403) {
+        setErrorMessage("Tài khoản hoặc mật khẩu không đúng!");
+        return;
+      }
+
+      if (!res.ok) {
+        setErrorMessage("Đăng nhập không thành công, xin thử lại");
+        return;
+      }
+
+      const data = await res.json();
+      console.log('Login response:', data);
+
+      AsyncStorage.setItem("user_name", data.name)
+      await SecureStore.setItemAsync("access_token", data.access_token);
+
+      setErrorMessage("");
+      router.replace("/home");
+      // alert("Đăng nhập thành công!");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setErrorMessage("Đã xảy ra lỗi. Vui lòng thử lại sau.");
     }
-    setErrorMessage("");
-    router.replace("/home");
-    // alert("Đăng nhập thành công!");
   }
 
   return (

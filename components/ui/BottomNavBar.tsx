@@ -13,24 +13,25 @@ type BottomNavBarProps = {
 };
 
 const tabs: TabItem[] = [
-  { key: 'Import', icon: require('../../assets/images/warehouse.png'), label: 'Import' },
-  { key: 'History', icon: require('../../assets/images/historyicon.png'), label: 'History' },
-  { key: 'Receipt', icon: require('../../assets/images/rcpiconwhite.png'), label: 'Receipt' },
-  { key: 'Setting', icon: require('../../assets/images/settingicon.png'), label: 'Setting' },
-  { key: 'Home', icon: require('../../assets/images/homeicon.png'), label: 'Home' },
+  { key: 'import', icon: require('../../assets/images/warehouse.png'), label: 'Import' },
+  { key: 'history', icon: require('../../assets/images/historyicon.png'), label: 'History' },
+  { key: 'receipt', icon: require('../../assets/images/rcpiconwhite.png'), label: 'Receipt' },
+  { key: 'setting', icon: require('../../assets/images/settingicon.png'), label: 'Setting' },
+  { key: 'home', icon: require('../../assets/images/homeicon.png'), label: 'Home' },
 ];
 
 const BottomNavBar: React.FC<BottomNavBarProps> = ({ onTabPress, activeTab }) => {
   return (
     <View style={styles.container}>
       {tabs.map((tab) => {
-        const isCenter = tab.key === 'Receipt';
+        const isCenter = tab.key === 'receipt';
         const isActive = activeTab === tab.key;
 
         return (
           <TouchableOpacity
             key={tab.key}
             style={[styles.tabButton, isCenter && styles.centerButton]}
+            onPress={() => onTabPress && onTabPress(tab.key)}
           >
             <Image
               source={tab.icon}

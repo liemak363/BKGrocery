@@ -7,6 +7,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { AppDispatch } from "../store/globalStore";
 import { useSelector, useDispatch } from "react-redux";
+import { jwtDecode } from "jwt-decode";
+import { sortRoutes } from "expo-router/build/sortRoutes";
+import * as SecureStore from "expo-secure-store";
+import setUserInfo from "../store/globalReducer";
 
 export default function RootLayout() {
   const router = useRouter();
@@ -18,6 +22,7 @@ export default function RootLayout() {
 
   const [isFirstInstall, setIsFirstInstall] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuth, setIsAuth] = useState(false);
 
   useEffect(() => {
     // Load user data when the app starts
@@ -32,6 +37,23 @@ export default function RootLayout() {
         } else {
           setIsFirstInstall(JSON.parse(isFirstInstallLocal));
         }
+
+        const token = await SecureStore.getItemAsync("access_token");
+        console.log("token", token)
+
+        if (token) {
+          type MyJwtPayload = { exp: number; name?: string };
+          const res = jwtDecode<MyJwtPayload>(token);
+          if (res && typeof res.exp === "number") {
+            if (Date.now() < res.exp * 1000) {
+              setIsAuth(true);
+              if (res.name) AsyncStorage.setItem("user_name", res.name)
+              else AsyncStorage.setItem("user_name", "none")
+              console.log("token_payload", res)
+            }
+          }
+        }
+        
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching books:", error);
@@ -44,9 +66,10 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isSetupLoading && !isLoading) {
       if (isFirstInstall) router.replace("/onboard");
-      else router.replace("/home");
+      else if(isAuth) router.replace("/home");
+      else router.replace("/login");
     }
-  }, [isSetupLoading, isFirstInstall]);
+  }, [isSetupLoading, isFirstInstall, isLoading, isAuth]);
 
   return (
     <View>
