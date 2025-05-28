@@ -119,6 +119,7 @@ export default function Explore() {
               <FeatureItem
                 image={require("../../assets/images/import.png")}
                 label="Import"
+                onPress={() => router.replace('/import' as any)}
               />
               <FeatureItem
                 image={require("../../assets/images/historyicon.png")}
