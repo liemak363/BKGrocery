@@ -20,13 +20,15 @@ import UserInfoCard from "@/components/ui/UserInfo";
 import BottomNavBar from "@/components/ui/BottomNavBar";
 import { AppDispatch } from "../../store/globalStore";
 
+import { CameraView, useCameraPermissions } from 'expo-camera';
+
 const { width } = Dimensions.get("window");
 
 const pages = [
   { key: "1", title: "Quét QR Code" },
   { key: "2", title: "Nhập sản phẩm" },
 ];
-// dữ liệu tạm
+// dữ liệu tạm thôi
 const khoHang = {
   'Bịch đường': 10000,
   'Thùng mì hảo hảo': 160000,
@@ -35,6 +37,8 @@ const khoHang = {
 };
 
 export default function Explore() {
+  const [permission, requestPermission] = useCameraPermissions();
+  const [isScanning, setIsScanning] = useState(true);
   // cho don thanh toan
   const [sanPhamNhap, setSanPhamNhap] = useState('');
   const [soLuongNhap, setSoLuongNhap] = useState('');
@@ -51,7 +55,7 @@ export default function Explore() {
     if (khoHang[ten]) {
       setSanPhamTimDuoc({ ten, gia: khoHang[ten] });
     } else {
-      setSanPhamKoTimDuoc('Sản phẩm không có trong kho');
+      setSanPhamKoTimDuoc(`Sản phẩm ${ten} không có trong kho`);
     }
   };
 
@@ -134,14 +138,39 @@ export default function Explore() {
               </TouchableOpacity>
             </View>
           )}
-          <Text style={styles.label}>NHẬP TÊN SẢN PHẨM</Text>
-          <TextInput
+          {/* <Text style={styles.label}>NHẬP TÊN SẢN PHẨM</Text> */}
+          {/* thay đổi bằng cái quét */}
+          {/* <TextInput
             style={styles.input}
             value={sanPhamNhap}
             onChangeText={setSanPhamNhap}
             onSubmitEditing={() => timSanPham(sanPhamNhap)}
             placeholder="Tên sản phẩm"
-          />
+          /> */}
+          {/* end */}
+          <View style={{ width: '100%', height: 300, marginBottom: 10, borderRadius: 10, overflow: 'hidden' }}>
+            {permission?.granted ? (
+              <CameraView
+                style={{ flex: 1 }}
+                facing="back"
+                barcodeScannerSettings={{
+                  barcodeTypes: ['ean13'], // chỉ quét QR
+                }}
+                onBarcodeScanned={({ data }) => {
+                  if (isScanning) {
+                    setIsScanning(false); // tránh quét nhiều lần
+                    setSanPhamNhap(data); // điền vào state
+                    timSanPham(data);     // gọi hàm tìm
+                    setTimeout(() => setIsScanning(true), 3000); // cho phép quét lại sau 3s
+                  }
+                }}
+              />
+            ) : (
+              <TouchableOpacity onPress={requestPermission} style={styles.confirmBtn}>
+                <Text style={{ color: 'white', textAlign: 'center' }}>Cho phép truy cập Camera</Text>
+              </TouchableOpacity>
+            )}
+          </View>
           {sanPhamKoTimDuoc && (
             <Text style={styles.errorMessage}>{sanPhamKoTimDuoc}</Text> 
           )}
@@ -291,11 +320,12 @@ export default function Explore() {
     fetchUserName();
   }, []);
 
-  const translateX = scrollX.interpolate({
-    inputRange: [0, width],
-    outputRange: [-90, 90],
-    extrapolate: "clamp",
-  });
+  // const translateX = scrollX.interpolate({
+  //   inputRange: [0, width],
+  //   outputRange: [-90, 90],
+  //   extrapolate: "clamp",
+  // });
+  const translateX = Animated.multiply(scrollX, tabWidth / width);
 
   return (
     <View style={{ flex: 1 }}>
