@@ -1,5 +1,5 @@
 export default interface UserInfo {
     name: string;
-    email: string;
+    id: number;
     // Add other user properties as needed
   }

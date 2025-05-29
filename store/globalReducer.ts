@@ -7,14 +7,16 @@ import UserInfo from "../types/UserInfo";
 
 export interface GlobalState {
   isSetupLoading: boolean;
+  accessToken: string;
   userInfo: UserInfo;
 }
 
 const initialState: GlobalState = {
   isSetupLoading: true,
+  accessToken: "",
   userInfo: {
     name: "",
-    email: "",
+    id: 0,
   }
 };
 
@@ -29,6 +31,12 @@ export const globalSlice = createSlice({
     // incrementByAmount: (state, action: PayloadAction<number>) => {
     //   state.isFirstInstall += action.payload;
     // },
+    setAccessToken: (state, action: PayloadAction<string>) => {
+      state.accessToken = action.payload;
+    },
+    setUserInfo: (state, action: PayloadAction<UserInfo>) => {
+      state.userInfo = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(setupApp.pending, (state) => {
@@ -49,5 +57,6 @@ export const globalSlice = createSlice({
 
 // Action creators are generated for each case reducer function
 // export const { increment, decrement, incrementByAmount } = globalSlice.actions;
+export const { setAccessToken, setUserInfo } = globalSlice.actions;
 
 export default globalSlice.reducer;

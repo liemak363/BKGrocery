@@ -50,8 +50,9 @@ export default function Explore() {
 
   useEffect(() => {
     const fetchUserName = async () => {
-      const res = await AsyncStorage.getItem("user_name");
-      setUserName(res ?? "none");
+      const res = await AsyncStorage.getItem("user_info");
+      const userInfo = res ? JSON.parse(res) : null;
+      setUserName(userInfo.name ?? "none");
     };
     fetchUserName();
   }, []);
@@ -144,7 +145,9 @@ export default function Explore() {
               title="reset 363"
               onPress={() => {
                 AsyncStorage.removeItem("isFirstInstall");
+                AsyncStorage.removeItem("userInfo");
                 SecureStore.deleteItemAsync("access_token");
+                SecureStore.deleteItemAsync("refresh_token");
               }}
             />
           </View>
