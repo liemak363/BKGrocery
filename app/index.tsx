@@ -72,9 +72,11 @@ export default function RootLayout() {
         const isFirstInstallLocal = await AsyncStorage.getItem(
           "isFirstInstall"
         );
-        if (isFirstInstallLocal === null) {
+        console.log("isFirstInstallLocal:", isFirstInstallLocal);
+        if (isFirstInstallLocal === null || isFirstInstallLocal === "true") {
           await AsyncStorage.setItem("isFirstInstall", "false");
           setIsFirstInstall(true);
+          setIsLoading(false);
           return;
         } else {
           setIsFirstInstall(JSON.parse(isFirstInstallLocal));
@@ -83,7 +85,7 @@ export default function RootLayout() {
         const accessToken = await SecureStore.getItemAsync("access_token");
         console.log("access token", accessToken);
 
-        if (accessToken) {
+        if (accessToken != null) {
           // Định nghĩa kiểu dữ liệu với trường exp là tùy chọn
           type MyJwtPayload = { exp?: number; name: string; sub: number };
 
@@ -150,7 +152,7 @@ export default function RootLayout() {
       else if (isAuth) router.replace("/home" as any);
       else {
         // clear all AsyncStorage and SecureStore
-        AsyncStorage.clear();
+        AsyncStorage.removeItem("user_info");
         SecureStore.deleteItemAsync("access_token");
         SecureStore.deleteItemAsync("refresh_token");
         
@@ -162,6 +164,7 @@ export default function RootLayout() {
   return (
     <View>
       <Text>Loading user data...</Text>
+      <Text>{isLoading ? 'true' : 'false'}</Text>
     </View>
   );
 }

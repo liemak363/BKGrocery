@@ -1,15 +1,18 @@
 export async function login(name: string, password: string) {
   try {
-    const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name,
-        password,
-      }),
-    });
+    const res = await fetch(
+      `${process.env.EXPO_PUBLIC_BACKEND_URL}auth/login`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          password,
+        }),
+      }
+    );
 
     if (res.status === 403) {
       throw new Error("Tài khoản hoặc mật khẩu không đúng!");
@@ -28,16 +31,19 @@ export async function login(name: string, password: string) {
 
 export async function signup(name: string, password: string) {
   try {
-    const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}auth/signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name,
-        password,
-      }),
-    });
+    const res = await fetch(
+      `${process.env.EXPO_PUBLIC_BACKEND_URL}auth/signup`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          password,
+        }),
+      }
+    );
 
     if (res.status === 406) {
       throw new Error("Tài khoản đã tồn tại!");
@@ -54,18 +60,23 @@ export async function signup(name: string, password: string) {
   }
 }
 
-export async function logout(accessToken: string, refreshToken: string) {
+export async function logout(accessToken: string, refreshToken?: string) {
   try {
-    const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}auth/logout`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        refreshToken,
-      }),
-    });
+    let body: any = {};
+    if (refreshToken && refreshToken !== "" && refreshToken !== null) {
+      body.refreshToken = refreshToken;
+    }
+    const res = await fetch(
+      `${process.env.EXPO_PUBLIC_BACKEND_URL}auth/logout`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: body,
+      }
+    );
 
     if (!res.ok) {
       throw new Error("Đăng xuất không thành công, xin thử lại");
@@ -80,15 +91,18 @@ export async function logout(accessToken: string, refreshToken: string) {
 
 export async function newAccessToken(refreshToken: string) {
   try {
-    const res = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}auth/newAccessToken`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        refreshToken,
-      }),
-    });
+    const res = await fetch(
+      `${process.env.EXPO_PUBLIC_BACKEND_URL}auth/newAccessToken`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          refreshToken,
+        }),
+      }
+    );
 
     if (!res.ok) {
       throw new Error("Lấy token mới không thành công, xin thử lại");
