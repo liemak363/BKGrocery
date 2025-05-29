@@ -78,58 +78,59 @@ const WareHouseScreen = () => {
 
     return (
         <View style={{ flex: 1, backgroundColor: "#ECFCCB"}}>
-            <ScrollView style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.replace('/home' as any)}>
-                        <Icon name="arrow-back" size={24} color="black" />
-                    </TouchableOpacity>
-                    <Text style={styles.headerText}>Quản lý kho</Text>
-                </View>
+            <View style={styles.container}>
+                <FlatList
+                  data={sampleProducts}
+                  renderItem={renderItem}
+                  keyExtractor={(item) => item.id.toString()}
+                  contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 40, paddingBottom: 100 }}
+                  ListHeaderComponent={
+                    <>
+                      <View style={styles.header}>
+                        <TouchableOpacity onPress={() => router.replace('/home' as any)}>
+                          <Icon name="arrow-back" size={24} color="black" />
+                        </TouchableOpacity>
+                        <Text style={styles.headerText}>Quản lý kho</Text>
+                      </View>
 
-                <View style={styles.searchBox}>
-                    <TextInput
-                        placeholder="Tìm kiếm theo tên mặt hàng"
-                        value={searchByName}
-                        onChangeText={setSearchByName}
-                        style={styles.searchInput}
-                    />
-                    <Icon name="search" size={20} color="gray" style={styles.searchIcon} />
-                </View>
-                <View style={styles.searchBox}>
-                    <TextInput
-                        placeholder="Tìm kiếm theo mã sản phẩm"
-                        value={searchById}
-                        onChangeText={setSearchById}
-                        style={styles.searchInput}
-                    />
-                    <Icon name="search" size={20} color="gray" style={styles.searchIcon} />
-                </View>
+                      <View style={styles.searchBox}>
+                        <TextInput
+                          placeholder="Tìm kiếm theo tên mặt hàng"
+                          value={searchByName}
+                          onChangeText={setSearchByName}
+                          style={styles.searchInput}
+                        />
+                        <Icon name="search" size={20} color="gray" style={styles.searchIcon} />
+                      </View>
 
-                <View style={styles.tableContainer}>
-                    <View style={styles.tableHeader}>
+                      <View style={styles.searchBox}>
+                        <TextInput
+                          placeholder="Tìm kiếm theo mã sản phẩm"
+                          value={searchById}
+                          onChangeText={setSearchById}
+                          style={styles.searchInput}
+                        />
+                        <Icon name="search" size={20} color="gray" style={styles.searchIcon} />
+                      </View>
+
+                      <View style={styles.tableHeader}>
                         <Text style={styles.headerCell}>MSP</Text>
                         <Text style={styles.headerCell}>Tên hàng</Text>
                         <Text style={styles.headerCell}>Số lượng</Text>
-                        <Text style={styles.headerCell}>Đơm giá</Text>
-                    </View>
-
-                    <FlatList
-                        data={sampleProducts}
-                        renderItem={renderItem}
-                        keyExtractor={(item) => item.id.toString()}
-                        contentContainerStyle={styles.listContainer}
+                        <Text style={styles.headerCell}>Đơn giá</Text>
+                      </View>
+                    </>
+                  }
+                  ListFooterComponent={
+                    <Pagination
+                      totalItems={totalItems}
+                      itemsPerPage={10}
+                      currentPage={currentPage}
+                      onPageChange={(page) => setCurrentPage(page)}
                     />
-                </View>
-
-                <Pagination
-                    totalItems={totalItems}          
-                    itemsPerPage={10}         
-                    currentPage={currentPage} 
-                    onPageChange={(page) => {
-                        setCurrentPage(page);
-                    }}
+                  }
                 />
-            </ScrollView>
+            </View>
             <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
         </View>
   );
@@ -150,14 +151,6 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, height: 40 },
   searchIcon: { marginLeft: 5 },
-
-  monthSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: 10,
-  },
-  monthNav: { fontWeight: 'bold', color: 'gray' },
-  activeMonth: { color: 'green', textDecorationLine: 'underline' },
 
   tableContainer: {
     marginTop: 16,
