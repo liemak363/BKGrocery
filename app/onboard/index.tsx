@@ -54,27 +54,7 @@ export default function Onboarding() {
       flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
       await AsyncStorage.setItem("isFirstInstall", "false");
-
-      const token = await SecureStore.getItemAsync("access_token");
-      console.log("token", token)
-      
-      if (token) {
-        type MyJwtPayload = { exp: number; name?: string };
-        const res = jwtDecode<MyJwtPayload>(token);
-        if (res && typeof res.exp === "number") {
-          console.log(res.exp * 1000)
-          console.log(Date.now())
-          console.log(Date.now() < res.exp * 1000) 
-          if (Date.now() < res.exp * 1000) {
-            if (res.name) AsyncStorage.setItem("user_name", res.name)
-            else AsyncStorage.setItem("user_name", "none")
-            router.replace("/home");
-          }
-          else router.replace("/login");
-        }
-        else router.replace("/login");
-      }
-      else router.replace("/login");
+      router.replace("/login");
     }
   };
 

@@ -16,60 +16,61 @@ import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import Header from "@/components/ui/header";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import { login } from "@/services/auth";
+import { useDispatch } from "react-redux";
+import { setUserInfo, setAccessToken } from "@/store/globalReducer";
+import { AppDispatch } from "@/store/globalStore";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
+  const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const handleLogin = async () => {
-    router.replace("/home");
-    console.log("HIHIHI")
 
-    if (!email || !password) {
+  const handleLogin = async () => {
+    // router.replace("/home");
+    // console.log("HIHIHI")
+
+    if (!name || !password) {
       setErrorMessage("Vui lòng nhập đủ thông tin");
       return;
     }
 
     try {
-      const res = await fetch('https://bkgrocery-be.onrender.com/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: email,
-          password: password,
-        }),
-      });
+      const res = await login(name, password);
 
-      if(res.status == 403) {
-        setErrorMessage("Tài khoản hoặc mật khẩu không đúng!");
-        return;
-      }
+      const userInfo = {
+        name: res.name,
+        id: res.id,
+      };
+      dispatch(setUserInfo(userInfo));
+      await AsyncStorage.setItem(
+        "user_info",
+        JSON.stringify({ name: res.name, id: res.id })
+      );
 
-      if (!res.ok) {
-        setErrorMessage("Đăng nhập không thành công, xin thử lại");
-        return;
-      }
+      dispatch(setAccessToken(res.access_token));
+      await SecureStore.setItemAsync("access_token", res.access_token);
 
-      const data = await res.json();
-      console.log('Login response:', data);
+      await SecureStore.setItemAsync("refresh_token", res.refresh_token);
 
-      AsyncStorage.setItem("user_name", data.name)
-      await SecureStore.setItemAsync("access_token", data.access_token);
+      setErrorMessage("");
+      router.replace("/home");
 
       setErrorMessage("");
       router.replace("/home");
       // alert("Đăng nhập thành công!");
     } catch (error: any) {
       console.error("Login error:", error);
-      setErrorMessage("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+      setErrorMessage(
+        error.message || "Đăng nhập không thành công, xin thử lại"
+      );
     }
-  }
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -85,52 +86,55 @@ export default function LoginScreen() {
         <Header />
 
         <View style={styles.body}>
-            <Text style={styles.loginTitle}>Đăng nhập</Text>
-            {errorMessage ? (
-                <Text style={styles.errorMessage}>{errorMessage}</Text>
-            ) : null}
+          <Text style={styles.loginTitle}>Đăng nhập</Text>
+          {errorMessage ? (
+            <Text style={styles.errorMessage}>{errorMessage}</Text>
+          ) : null}
 
-            <Text style={styles.label}>Nhập email</Text>
-            <TextInput 
-                style={styles.input} 
-                placeholder="Email" 
-                placeholderTextColor="#888"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail} 
+          <Text style={styles.label}>Nhập tên đăng nhập</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Tên đăng nhập"
+            placeholderTextColor="#888"
+            value={name}
+            onChangeText={setName}
+          />
+
+          <Text style={styles.label}>Nhập mật khẩu</Text>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.inputbtn}
+              placeholder="Mật Khẩu"
+              placeholderTextColor="#888"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!passwordVisible}
             />
-
-            <Text style={styles.label}>Nhập mật khẩu</Text>
-            <View style={styles.passwordContainer}>
-                <TextInput
-                    style={styles.inputbtn}
-                    placeholder="Mật Khẩu"
-                    placeholderTextColor="#888"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!passwordVisible}
-                />
-                <TouchableOpacity
-                    style={styles.eyeIcon}
-                    onPress={() => setPasswordVisible(!passwordVisible)}
-                >
-                    <Ionicons name={passwordVisible ? "eye" : "eye-off"} size={20} color="#000" />
-                </TouchableOpacity>
-            </View>
-            <TouchableOpacity>
-                <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                <Text style={styles.loginButtonText}>Đăng nhập</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-                style={styles.registerButton} 
-                onPress={() => router.replace("/register")}
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setPasswordVisible(!passwordVisible)}
             >
-                <Text style={styles.registerButtonText}>Đăng ký</Text>
+              <Ionicons
+                name={passwordVisible ? "eye" : "eye-off"}
+                size={20}
+                color="#000"
+              />
             </TouchableOpacity>
+          </View>
+          <TouchableOpacity>
+            <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+            <Text style={styles.loginButtonText}>Đăng nhập</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.registerButton}
+            onPress={() => router.replace("/register")}
+          >
+            <Text style={styles.registerButtonText}>Đăng ký</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
       {/* <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} /> */}
@@ -221,4 +225,3 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
 });
-

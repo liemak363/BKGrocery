@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { logout } from "@/services/auth";
 
 import { AppDispatch } from "../../store/globalStore";
 import { useDispatch, useSelector } from "react-redux";
@@ -32,29 +33,20 @@ export default function Explore() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
-  const { userInfo, isSetupLoading } = useSelector(
+  const { userInfo, accessToken } = useSelector(
     (state: RootState) => state.global
   );
 
   const [activeTab, setActiveTab] = useState("Home");
-  const [userName, setUserName] = useState("none");
 
   const handleTabPress = (tab: string) => {
     console.log(tab);
     // Map tab names to valid route paths
     let route: string;
-    route = "./" + tab
+    route = "./" + tab;
     router.replace(route as any);
     setActiveTab(tab);
   };
-
-  useEffect(() => {
-    const fetchUserName = async () => {
-      const res = await AsyncStorage.getItem("user_name");
-      setUserName(res ?? "none");
-    };
-    fetchUserName();
-  }, []);
 
   return (
     <View style={{ flex: 1 }}>
@@ -71,25 +63,36 @@ export default function Explore() {
 
         {/* User Info */}
         <View style={styles.subcontainer}>
-            <View style={styles.userSection}>
-                <UserInfoCard
-                name={userName}
-                role="Owner"
-                initial={userName[0].toUpperCase()}
-                onPress={() => console.log("User card tapped")}
-                />
-            </View>
+          <View style={styles.userSection}>
+            <UserInfoCard
+              name={userInfo.name ?? "none"}
+              role="Owner"
+              initial={userInfo.name[0].toUpperCase()}
+              onPress={() => console.log("User card tapped")}
+            />
+          </View>
         </View>
 
         <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={async () => {
-                await AsyncStorage.removeItem("user_name");
-                await SecureStore.deleteItemAsync("access_token");
-                router.replace("/login");
-            }}
-            >
-            <Text style={styles.logoutText}>Log Out</Text>
+          style={styles.logoutButton}
+          onPress={async () => {
+            await AsyncStorage.removeItem("user_name");
+            await SecureStore.deleteItemAsync("access_token");
+
+            const refreshToken = await SecureStore.getItemAsync(
+              "refresh_token"
+            );
+            await logout(accessToken, refreshToken || "");
+
+            await SecureStore.deleteItemAsync("refresh_token");
+
+            if (router.canDismiss()) {
+              router.dismissAll();
+            }
+            router.replace("/login");
+          }}
+        >
+          <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
       <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
@@ -122,23 +125,23 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   logoutButton: {
-  marginTop: 20,
-  backgroundColor: "#DC2626",
-  paddingVertical: 12,
-  borderRadius: 30, // More rounded
-  alignItems: "center",
-  width: "90%", // Full width of parent (matches UserInfoCard if parent is padded)
-  alignSelf: "center",
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.15,
-  shadowRadius: 4,
-  elevation: 2,
-  margin: 10,
-},
-logoutText: {
-  color: "#fff",
-  fontWeight: "bold",
-  fontSize: 16,
-},
+    marginTop: 20,
+    backgroundColor: "#DC2626",
+    paddingVertical: 12,
+    borderRadius: 30, // More rounded
+    alignItems: "center",
+    width: "90%", // Full width of parent (matches UserInfoCard if parent is padded)
+    alignSelf: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+    margin: 10,
+  },
+  logoutText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 });
