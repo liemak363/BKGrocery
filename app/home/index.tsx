@@ -114,6 +114,8 @@ export default function Explore() {
               <FeatureItem
                 image={require("../../assets/images/warehouse.png")}
                 label="Warehouse"
+                onPress={() => router.replace('/warehouse' as any)}
+
               />
 
               <FeatureItem
@@ -124,14 +126,17 @@ export default function Explore() {
               <FeatureItem
                 image={require("../../assets/images/historyicon.png")}
                 label="History"
+                onPress={() => router.replace('/history' as any)}
               />
               <FeatureItem
                 image={require("../../assets/images/scanicon.png")}
-                label="Scan item"
+                label="Import Log"
+                // onPress={() => router.replace('/import' as any)}
               />
               <FeatureItem
                 image={require("../../assets/images/receipicon.png")}
                 label="Receipt"
+                onPress={() => router.replace('/receipt' as any)}
               />
               <FeatureItem
                 image={require("../../assets/images/settingicon.png")}
