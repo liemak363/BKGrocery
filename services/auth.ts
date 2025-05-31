@@ -99,7 +99,7 @@ export async function newAccessToken(refreshToken: string) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          refreshToken,
+          refresh_token: refreshToken,
         }),
       }
     );
