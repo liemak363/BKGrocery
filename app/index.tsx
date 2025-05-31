@@ -84,6 +84,10 @@ export default function RootLayout() {
 
         const accessToken = await SecureStore.getItemAsync("access_token");
         console.log("access token", accessToken);
+        const refreshToken = await SecureStore.getItemAsync(
+          "refresh_token"
+        );
+        console.log("refresh token", refreshToken);
 
         if (accessToken != null) {
           // Định nghĩa kiểu dữ liệu với trường exp là tùy chọn
