@@ -14,7 +14,7 @@ import {
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { AppDispatch } from "../../store/globalStore";
+import { AppDispatch } from "@/store/globalStore";
 import { useDispatch, useSelector } from "react-redux";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -26,7 +26,7 @@ import FeatureItem from "@/components/ui/FeatureItem";
 import BottomNavBar from "@/components/ui/BottomNavBar";
 import * as SecureStore from "expo-secure-store";
 
-import { RootState } from "../../store/globalStore";
+import { RootState } from "@/store/globalStore";
 
 export default function Explore() {
   const dispatch = useDispatch<AppDispatch>();
@@ -158,7 +158,7 @@ export default function Explore() {
           </View>
         </View>
       </ScrollView>
-      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
+      {/* <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} /> */}
     </View>
   );
 }

@@ -9,7 +9,6 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import BottomNavBar from "@/components/ui/BottomNavBar";
 import { useRouter } from "expo-router";
 
 export default function ImportScreen() {
@@ -125,9 +124,6 @@ export default function ImportScreen() {
           <Text style={styles.confirmButtonText}>xác nhận</Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* Fixed Bottom Navigation */}
-      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </View>
   );
 }

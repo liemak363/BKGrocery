@@ -153,7 +153,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isLoading) {
       if (isFirstInstall) router.replace("/onboard" as any);
-      else if (isAuth) router.replace("/home" as any);
+      else if (isAuth) router.replace("/main" as any);
       else {
         // clear all AsyncStorage and SecureStore
         AsyncStorage.removeItem("user_info");

@@ -15,7 +15,7 @@ import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { logout } from "@/services/auth";
 
-import { AppDispatch } from "../../store/globalStore";
+import { AppDispatch } from "@/store/globalStore";
 import { useDispatch, useSelector } from "react-redux";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -27,7 +27,7 @@ import FeatureItem from "@/components/ui/FeatureItem";
 import BottomNavBar from "@/components/ui/BottomNavBar";
 import * as SecureStore from "expo-secure-store";
 
-import { RootState } from "../../store/globalStore";
+import { RootState } from "@/store/globalStore";
 
 export default function Explore() {
   const dispatch = useDispatch<AppDispatch>();
@@ -38,15 +38,6 @@ export default function Explore() {
   );
 
   const [activeTab, setActiveTab] = useState("Home");
-
-  const handleTabPress = (tab: string) => {
-    console.log(tab);
-    // Map tab names to valid route paths
-    let route: string;
-    route = "./" + tab;
-    router.replace(route as any);
-    setActiveTab(tab);
-  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -95,7 +86,6 @@ export default function Explore() {
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
-      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </View>
   );
 }
