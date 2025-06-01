@@ -1,8 +1,7 @@
 import React from "react";
-import { Tabs } from "expo-router";
+import { Tabs, useSegments } from "expo-router";
 import BottomNavBar from "@/components/ui/BottomNavBar";
 import { View, StyleSheet } from "react-native";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
 // Interface for the TabBar props
 interface CustomTabBarProps {
@@ -23,11 +22,13 @@ interface CustomTabBarProps {
 
 // Custom TabBar component that uses our BottomNavBar
 function CustomTabBar({ state, navigation }: CustomTabBarProps) {
+  const segments = useSegments();
+  
   const onTabPress = (tabKey: string) => {
     // Map tab keys to route names
     let routeName = tabKey;
     if (tabKey === "home") routeName = "index";
-    if (tabKey === "history") routeName = "saleLog/index";
+    if (tabKey === "history") routeName = "saleLog";
 
     const event = navigation.emit({
       type: "tabPress",
@@ -46,6 +47,12 @@ function CustomTabBar({ state, navigation }: CustomTabBarProps) {
     if (routeName === "importLog") return "importLog";
     return routeName;
   };
+  // Hide bottom nav bar for saleLog detail pages
+  const shouldHideBottomNav = (segments as string[]).includes('[id]') && (segments as string[]).includes('saleLog');
+  
+  if (shouldHideBottomNav) {
+    return null;
+  }
 
   return <BottomNavBar activeTab={getActiveTabKey()} onTabPress={onTabPress} />;
 }
@@ -69,7 +76,7 @@ export default function Layout() {
         <Tabs.Screen name="setting" options={{ title: "Setting" }} />
         <Tabs.Screen name="importLog" options={{ title: "ImportLog" }} />
         <Tabs.Screen name="warehouse" options={{ title: "Warehouse" }} />
-        <Tabs.Screen name="saleLog/index" options={{ title: "Sale Log" }} />
+        <Tabs.Screen name="saleLog" options={{ title: "Sale Log" }} />
       </Tabs>
     </View>
   );

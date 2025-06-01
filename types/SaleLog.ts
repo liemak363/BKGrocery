@@ -1,6 +1,8 @@
 export interface SaleLog {
+  id?: string;
   total?: number;
   createdAt: string;
+  updatedAt?: string;
   items: SaleLogItem[];
 }
 

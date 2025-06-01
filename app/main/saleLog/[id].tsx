@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import BottomNavBar from "@/components/ui/BottomNavBar";
+
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/store/globalStore";
@@ -121,16 +121,6 @@ const SaleLogIttemScreen = () => {
   const { id } = useLocalSearchParams(); //id lấy được từ url
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("Home");
-
-  const handleTabPress = (tab: string) => {
-    console.log(tab);
-    // Map tab names to valid route paths
-    let route: string;
-    route = "../" + tab;
-    router.replace(route as any);
-    setActiveTab(tab);
-  };
 
   const totalAmount = mockSaleLog.items.reduce(
     (sum, item) => sum + item.price,
@@ -141,20 +131,17 @@ const SaleLogIttemScreen = () => {
     <View style={{ flex: 1, backgroundColor: "#ECFCCB" }}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.replace("/history" as any)}>
+          <TouchableOpacity onPress={() => router.back()}>
             <Icon name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
           <Text style={styles.headerText}>Chi tiết đơn hàng</Text>
         </View>
-
         <View style={styles.infoBlock}>
           <Text>MÃ ĐƠN HÀNG: {id}</Text>
           <Text>TÊN NGƯỜI BÁN: {mockSaleLog.userName}</Text>
           <Text>THỜI GIAN GIAO DỊCH: {mockSaleLog.transactionTime}</Text>
         </View>
-
         <Text style={styles.paymentHeader}>ĐƠN THANH TOÁN</Text>
-
         <View style={styles.tableContainer}>
           <View style={styles.tableHeader}>
             <Text style={styles.headerCell}>STT</Text>
@@ -183,7 +170,6 @@ const SaleLogIttemScreen = () => {
           </View>
         </View>
       </View>
-      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </View>
   );
 };

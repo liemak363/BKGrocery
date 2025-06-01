@@ -213,7 +213,13 @@ export default function Explore() {
   const huyDonHang = () => {
     setDonHang([]);
     setSaleLog({
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toLocaleString("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
       items: [],
       total: 0,
     });

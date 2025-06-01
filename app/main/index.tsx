@@ -37,9 +37,7 @@ export default function Explore() {
   );
 
   const [activeTab, setActiveTab] = useState("home");
-  const [userName, setUserName] = useState("none");
-
-  // Handle feature item press using tab navigation
+  const [userName, setUserName] = useState("none"); // Handle feature item press using tab navigation
   const handleFeaturePress = (featureName: string) => {
     let routeName: string;
 
@@ -51,8 +49,9 @@ export default function Explore() {
         routeName = "import";
         break;
       case "history":
-        routeName = "saleLog/index";
-        break;
+        // Use router.push for saleLog since it's now a separate stack
+        router.push("/main/saleLog");
+        return;
       case "import log":
         routeName = "importLog";
         break;
@@ -66,7 +65,7 @@ export default function Explore() {
         routeName = "index";
     }
 
-    // Use navigation.navigate instead of router.replace for tab navigation
+    // Use navigation.navigate for tab navigation
     navigation.navigate(routeName as never);
   };
 
@@ -98,7 +97,7 @@ export default function Explore() {
             <UserInfoCard
               name={userName}
               role="Owner"
-              initial={(userName[0] ?? 'n').toUpperCase()}
+              initial={(userName[0] ?? "n").toUpperCase()}
               onPress={() => console.log("User card tapped")}
             />
 

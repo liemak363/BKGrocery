@@ -70,6 +70,14 @@ const ImportLogScreen = () => {
 
   // Fetch import logs from API
   const fetchImportLogs = async () => {
+    // Keep lastTime as Vietnam time without timezone conversion
+    let lastTimeInput = lastTime.trim() || null;
+
+    // If user provided time, treat it as Vietnam timezone
+    if (lastTimeInput) {
+      lastTimeInput = lastTimeInput + "+07:00";
+    }
+
     setIsLoading(true);
     try {
       const logs = await importLog(
@@ -78,7 +86,7 @@ const ImportLogScreen = () => {
         dispatch,
         setAccessToken,
         setRefreshToken,
-        lastTime || null,
+        lastTimeInput || null,
         offset,
         ITEMS_PER_PAGE
       );
@@ -89,7 +97,7 @@ const ImportLogScreen = () => {
       if (logs.length < ITEMS_PER_PAGE) {
         setTotalItems(offset + logs.length);
       } else {
-        setTotalItems(offset + ITEMS_PER_PAGE + 1); // Estimate there might be more
+        setTotalItems(1000); // Estimate there might be more
       }
     } catch (error: any) {
       console.error("Error fetching import logs:", error);
