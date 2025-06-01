@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,21 +10,23 @@ import {
   StatusBar,
   ScrollView,
   TextInput,
+  AppState,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import Header from "@/components/ui/header";
 import UserInfoCard from "@/components/ui/UserInfo";
-import BottomNavBar from "@/components/ui/BottomNavBar";
-import { AppDispatch, RootState } from "../../store/globalStore";
+import { AppDispatch, RootState } from "@/store/globalStore";
+import { setAccessToken, setRefreshToken } from "@/store/globalReducer";
 
 import ProductType from "@/types/Product";
-import { SaleLog, SaleLogItem } from "@/types/SaleLog";
+import { SaleLogPost, SaleLogItemPost } from "@/types/SaleLog";
 import { productById } from "@/services/product";
+import { postSale } from "@/services/sale";
 
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { CameraView, useCameraPermissions, Camera } from "expo-camera";
+import { configureStore } from "@reduxjs/toolkit";
 
 const { width } = Dimensions.get("window");
 const paddingConst = 16; // padding for the FlatList container
@@ -33,20 +35,18 @@ const pages = [
   { key: "1", title: "Quét QR Code" },
   { key: "2", title: "Nhập sản phẩm" },
 ];
-// dữ liệu tạm thôi
-const khoHang = {
-  "Bịch đường": 10000,
-  "Thùng mì hảo hảo": 160000,
-  "Dầu ăn": 45000,
-  "Bịch muối": 5000,
-};
 
 export default function Explore() {
-  const { accessToken } = useSelector((state: RootState) => state.global);
+  const { userInfo, accessToken, refreshToken } = useSelector(
+    (state: RootState) => state.global
+  );
 
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [appState, setAppState] = useState(AppState.currentState);
+  const appStateRef = useRef(AppState.currentState);
   // cho don thanh toan
   const [sanPhamNhap, setSanPhamNhap] = useState("");
   const [soLuongNhap, setSoLuongNhap] = useState("");
@@ -55,9 +55,9 @@ export default function Explore() {
   );
   const [sanPhamKoTimDuoc, setSanPhamKoTimDuoc] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [donHang, setDonHang] = useState<SaleLogItem[]>([]);
-  const [saleLog, setSaleLog] = useState<SaleLog>({
-    createdAt: new Date().toISOString(),
+  const [donHang, setDonHang] = useState<SaleLogItemPost[]>([]);
+  const [saleLog, setSaleLog] = useState<SaleLogPost>({
+    createdAt: "",
     items: [],
   });
   const [thongBao, setThongBao] = useState("");
@@ -68,10 +68,25 @@ export default function Explore() {
 
     try {
       // Call the API to get product details
-      const product = await productById(productId, accessToken);
+      const product = await productById(
+        productId,
+        accessToken,
+        refreshToken,
+        dispatch,
+        setAccessToken,
+        setRefreshToken
+      );
       setSanPhamTimDuoc(product);
     } catch (error: any) {
       console.error("Error fetching product:", error);
+      if (error.message === "Chưa đăng nhập") {
+        if (router.canDismiss()) {
+          router.dismissAll();
+        }
+        router.replace("/login");
+        return;
+      }
+
       setSanPhamKoTimDuoc(
         error.message || `Không tìm thấy sản phẩm với mã: ${productId}`
       );
@@ -95,7 +110,7 @@ export default function Explore() {
       (item) => item.productId === sanPhamTimDuoc.id
     );
 
-    let updatedItems: SaleLogItem[];
+    let updatedItems: SaleLogItemPost[];
 
     if (existingItemIndex >= 0) {
       // Update quantity if product already exists
@@ -106,7 +121,7 @@ export default function Explore() {
       };
     } else {
       // Add new product to order
-      const newItem: SaleLogItem = {
+      const newItem: SaleLogItemPost = {
         productId: sanPhamTimDuoc.id.toString(),
         price: sanPhamTimDuoc.price,
         quantity: quantity,
@@ -144,17 +159,37 @@ export default function Explore() {
     setIsLoading(true);
 
     try {
-      // Here you would call your API to submit the sales order
-      // For example:
-      // await submitSalesOrder(saleLog, accessToken);
-
-      // For now, we'll just simulate a successful submission
       console.log("Submitting order:", JSON.stringify(saleLog));
+
+      const copySaleLog = {
+        ...saleLog,
+        createdAt: new Date().toISOString(),
+      };
+      let response;
+      try {
+        response = await postSale(
+          copySaleLog,
+          accessToken,
+          refreshToken,
+          dispatch,
+          setAccessToken,
+          setRefreshToken
+        );
+      } catch (error: any) {
+        if (error.message === "Chưa đăng nhập") {
+          if (router.canDismiss()) {
+            router.dismissAll();
+          }
+          router.replace("/login");
+          return;
+        }
+        throw error;
+      }
 
       // Reset the order
       setDonHang([]);
       setSaleLog({
-        createdAt: new Date().toISOString(),
+        createdAt: "",
         items: [],
         total: 0,
       });
@@ -174,6 +209,27 @@ export default function Explore() {
       setIsLoading(false);
     }
   };
+
+  const huyDonHang = () => {
+    setDonHang([]);
+    setSaleLog({
+      createdAt: new Date().toLocaleString("vi-VN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      items: [],
+      total: 0,
+    });
+    setSanPhamNhap("");
+    setSoLuongNhap("");
+    setSanPhamTimDuoc(null);
+    setSanPhamKoTimDuoc(null);
+    setErrorMessage(null);
+  };
+
   const tongTien = donHang.reduce(
     (total, item) => total + item.quantity * item.price,
     0
@@ -186,33 +242,105 @@ export default function Explore() {
   const [activeTab, setActiveTab] = useState("Home");
   const [userName, setUserName] = useState("none");
 
-  const flatListRef = useRef(null);
+  const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const tabWidth = width / pages.length;
-
-  const onViewRef = useRef(({ viewableItems }) => {
-    if (viewableItems.length > 0) {
+  const onViewRef = useRef(({ viewableItems }: any) => {
+    if (viewableItems && viewableItems.length > 0) {
       const index = viewableItems[0].index ?? 0;
       setSelectedIndex(index);
+
+      // Activate camera if user switched to scan tab
+      if (index === 0 && permission?.granted) {
+        resetCamera();
+      } else {
+        stopCamera();
+      }
     }
   });
-
   const viewConfigRef = useRef({ viewAreaCoveragePercentThreshold: 50 });
 
+  // Camera management functions
+  const resetCamera = () => {
+    if (permission?.granted) {
+      setIsScanning(true);
+      setCameraActive(true);
+    }
+  };
+
+  const stopCamera = () => {
+    setIsScanning(false);
+    setCameraActive(false);
+  };
+
+  // Handle tab switching
+  useEffect(() => {
+    if (selectedIndex === 0 && permission?.granted) {
+      // Reset camera when switching to scan tab
+      resetCamera();
+    } else {
+      // Turn off camera when not on scan tab
+      stopCamera();
+    }
+  }, [selectedIndex, permission?.granted]);
+
+  // Handle app state changes (background/foreground)
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      appStateRef.current = nextAppState;
+      setAppState(nextAppState);
+
+      if (
+        nextAppState === "active" &&
+        selectedIndex === 0 &&
+        permission?.granted
+      ) {
+        // App came to foreground and we're on the scan tab
+        resetCamera();
+      } else if (nextAppState !== "active") {
+        // App went to background
+        stopCamera();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [selectedIndex, permission?.granted]);
+
+  // Reset camera when screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      if (selectedIndex === 0 && permission?.granted) {
+        resetCamera();
+      }
+
+      return () => {
+        // Clean up when screen loses focus
+        stopCamera();
+      };
+    }, [selectedIndex, permission?.granted])
+  );
+
   const scrollToIndex = (index: number) => {
-    flatListRef.current?.scrollToIndex({ index });
+    if (flatListRef.current) {
+      flatListRef.current.scrollToIndex({ index });
+    }
   };
 
   const renderItem = ({ item }: { item: { key: string; title: string } }) => (
-    <View style={styles.page}>
+    <ScrollView
+      style={styles.page}
+      contentContainerStyle={{ alignItems: "center", justifyContent: "center" }}
+    >
       {/* <Text style={styles.pageTitle}>{item.title}</Text> */}
       {item.key === "1" ? (
         <View style={styles.subcontainer1}>
           {hienThongBao && (
             <View style={styles.modalThongBao}>
-              <Text style={styles.thongBaoText}>Đã ghi nhận đơn hàng</Text>
+              <Text style={styles.thongBaoText}>{thongBao}</Text>
               <TouchableOpacity
                 onPress={() => setHienThongBao(false)}
                 style={styles.continueBtn}
@@ -226,8 +354,7 @@ export default function Explore() {
           {/* <TextInput
             style={styles.input}
             value={sanPhamNhap}
-            onChangeText={setSanPhamNhap}
-            onSubmitEditing={() => timSanPham(sanPhamNhap)}
+            onChangeText={setSanPhamNhap}            onSubmitEditing={() => timSanPham(sanPhamNhap)}
             placeholder="Tên sản phẩm"
           /> */}
           {/* end */}
@@ -241,22 +368,33 @@ export default function Explore() {
             }}
           >
             {permission?.granted ? (
-              <CameraView
-                style={{ flex: 1 }}
-                facing="back"
-                barcodeScannerSettings={{
-                  barcodeTypes: ["ean13"], // chỉ quét QR
-                }}
-                onBarcodeScanned={({ data }) => {
-                  console.log("Scanned data:", data);
-                  if (isScanning) {
-                    setIsScanning(false); // tránh quét nhiều lần
-                    setSanPhamNhap(data); // điền vào state
-                    timSanPham(data); // gọi hàm tìm
-                    setTimeout(() => setIsScanning(true), 3000); // cho phép quét lại sau 3s
-                  }
-                }}
-              />
+              cameraActive ? (
+                <CameraView
+                  style={{ flex: 1 }}
+                  facing="back"
+                  barcodeScannerSettings={{
+                    barcodeTypes: ["ean13"], // chỉ quét QR
+                  }}
+                  onBarcodeScanned={({ data }) => {
+                    console.log("Scanned data:", data);
+                    if (isScanning) {
+                      setIsScanning(false); // tránh quét nhiều lần
+                      setSanPhamNhap(data); // điền vào state
+                      timSanPham(data); // gọi hàm tìm
+                      setTimeout(() => setIsScanning(true), 3000); // cho phép quét lại sau 3s
+                    }
+                  }}
+                />
+              ) : (
+                <TouchableOpacity
+                  onPress={resetCamera}
+                  style={styles.confirmBtn}
+                >
+                  <Text style={{ color: "white", textAlign: "center" }}>
+                    Bật Camera
+                  </Text>
+                </TouchableOpacity>
+              )
             ) : (
               <TouchableOpacity
                 onPress={requestPermission}
@@ -308,7 +446,6 @@ export default function Explore() {
               </View>
             </View>
           )}
-
           <Text style={styles.title}>ĐƠN THANH TOÁN</Text>
           <View style={styles.table}>
             <View style={styles.row}>
@@ -331,23 +468,49 @@ export default function Explore() {
               <Text style={styles.cell}>{tongTien.toLocaleString()}vnd</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.confirmBtn} onPress={xacNhanDonHang}>
-            <Text
-              style={{
-                color: "white",
-                textAlign: "center",
-                fontWeight: "bold",
-              }}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-around",
+              width: "100%",
+            }}
+          >
+            <TouchableOpacity
+              style={styles.cancelReceiptBtn}
+              onPress={huyDonHang}
             >
-              XÁC NHẬN
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                HỦY
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.confirmBtn}
+              onPress={xacNhanDonHang}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                XÁC NHẬN
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ) : (
         <View style={styles.subcontainer1}>
           {hienThongBao && (
             <View style={styles.modalThongBao}>
-              <Text style={styles.thongBaoText}>Đã ghi nhận đơn hàng</Text>
+              <Text style={styles.thongBaoText}>{thongBao}</Text>
               <TouchableOpacity
                 onPress={() => setHienThongBao(false)}
                 style={styles.continueBtn}
@@ -427,34 +590,58 @@ export default function Explore() {
               <Text style={styles.cell}>{tongTien.toLocaleString()}vnd</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.confirmBtn} onPress={xacNhanDonHang}>
-            <Text
-              style={{
-                color: "white",
-                textAlign: "center",
-                fontWeight: "bold",
-              }}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-around",
+              width: "100%",
+            }}
+          >
+            <TouchableOpacity
+              style={styles.cancelReceiptBtn}
+              onPress={huyDonHang}
             >
-              XÁC NHẬN
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                HỦY
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.confirmBtn}
+              onPress={xacNhanDonHang}
+            >
+              <Text
+                style={{
+                  color: "white",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                }}
+              >
+                XÁC NHẬN
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 
-  const handleTabPress = (tab: string) => {
-    let route: string = "./" + tab;
-    router.replace(route as any);
-    setActiveTab(tab);
-  };
-
   useEffect(() => {
-    const fetchUserName = async () => {
-      const res = await AsyncStorage.getItem("user_name");
-      setUserName(res ?? "none");
+    // Initialize camera if we're on the scan tab
+    if (selectedIndex === 0 && permission?.granted) {
+      resetCamera();
+    }
+
+    // Clean up function
+    return () => {
+      stopCamera();
     };
-    fetchUserName();
   }, []);
 
   // const translateX = scrollX.interpolate({
@@ -475,7 +662,7 @@ export default function Explore() {
 
         <View style={styles.subcontainer}>
           <UserInfoCard
-            name={userName}
+            name={userInfo.name ?? "none"}
             role="Owner"
             initial={userName[0]?.toUpperCase() || "A"}
             onPress={() => console.log("User card tapped")}
@@ -526,8 +713,6 @@ export default function Explore() {
           />
         </View>
       </View>
-
-      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </View>
   );
 }
@@ -546,9 +731,10 @@ const styles = StyleSheet.create({
   },
   page: {
     width: width - paddingConst,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    flex: 1,
+    // justifyContent: "center",
+    // alignItems: "center",
+    paddingHorizontal: 20,
     backgroundColor: "#f0fff0",
   },
   pageTitle: {
@@ -585,12 +771,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#2ecc71",
   },
   subcontainer1: {
-    backgroundColor: '#f0ffdd',
+    paddingVertical: 20,
+    backgroundColor: "#f0ffdd",
     width: "100%",
-    // flex: 1,
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-
   },
   label: {
     alignSelf: "flex-start",
@@ -678,6 +864,15 @@ const styles = StyleSheet.create({
   },
   confirmBtn: {
     backgroundColor: "green",
+    marginTop: 15,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingLeft: 30,
+    paddingRight: 30,
+    borderRadius: 10,
+  },
+  cancelReceiptBtn: {
+    backgroundColor: "red",
     marginTop: 15,
     paddingTop: 10,
     paddingBottom: 10,

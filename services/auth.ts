@@ -104,8 +104,11 @@ export async function newAccessToken(refreshToken: string) {
       }
     );
 
-    if (!res.ok) {
-      throw new Error("Lấy token mới không thành công, xin thử lại");
+    if (res.status === 400) {
+      throw new Error("Chưa có token làm mới");
+    }
+    if (res.status === 403) {
+      throw new Error("Token làm mới không hợp lệ hoặc đã hết hạn");
     }
 
     const data = await res.json();

@@ -15,7 +15,7 @@ import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { logout } from "@/services/auth";
 
-import { AppDispatch } from "../../store/globalStore";
+import { AppDispatch } from "@/store/globalStore";
 import { useDispatch, useSelector } from "react-redux";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -24,10 +24,14 @@ import UserInfoCard from "@/components/ui/UserInfo";
 import InfoCard from "@/components/ui/InfoCard";
 // import WeeklyRevenueCard from '@/components/ui/WeeklyRevenueCard';
 import FeatureItem from "@/components/ui/FeatureItem";
-import BottomNavBar from "@/components/ui/BottomNavBar";
 import * as SecureStore from "expo-secure-store";
+import {
+  setUserInfo,
+  setAccessToken,
+  setRefreshToken,
+} from "@/store/globalReducer";
 
-import { RootState } from "../../store/globalStore";
+import { RootState } from "@/store/globalStore";
 
 export default function Explore() {
   const dispatch = useDispatch<AppDispatch>();
@@ -38,15 +42,6 @@ export default function Explore() {
   );
 
   const [activeTab, setActiveTab] = useState("Home");
-
-  const handleTabPress = (tab: string) => {
-    console.log(tab);
-    // Map tab names to valid route paths
-    let route: string;
-    route = "./" + tab;
-    router.replace(route as any);
-    setActiveTab(tab);
-  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -67,7 +62,7 @@ export default function Explore() {
             <UserInfoCard
               name={userInfo.name ?? "none"}
               role="Owner"
-              initial={userInfo.name[0].toUpperCase()}
+              initial={(userInfo.name[0] ?? 'n').toUpperCase()}
               onPress={() => console.log("User card tapped")}
             />
           </View>
@@ -85,6 +80,9 @@ export default function Explore() {
             await logout(accessToken, refreshToken || "");
 
             await SecureStore.deleteItemAsync("refresh_token");
+            dispatch(setUserInfo({ name: "", id: 0 }));
+            dispatch(setAccessToken(""));
+            dispatch(setRefreshToken(""));
 
             if (router.canDismiss()) {
               router.dismissAll();
@@ -95,7 +93,6 @@ export default function Explore() {
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
-      <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />
     </View>
   );
 }

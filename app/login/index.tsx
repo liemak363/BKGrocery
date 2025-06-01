@@ -59,10 +59,8 @@ export default function LoginScreen() {
       await SecureStore.setItemAsync("refresh_token", res.refresh_token);
 
       setErrorMessage("");
-      router.replace("/home");
+      router.replace("/main");
 
-      setErrorMessage("");
-      router.replace("/home");
       // alert("Đăng nhập thành công!");
     } catch (error: any) {
       console.error("Login error:", error);
