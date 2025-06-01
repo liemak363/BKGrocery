@@ -9,7 +9,11 @@ import { useDispatch } from "react-redux";
 import { jwtDecode } from "jwt-decode";
 import { sortRoutes } from "expo-router/build/sortRoutes";
 import * as SecureStore from "expo-secure-store";
-import { setUserInfo, setAccessToken } from "../store/globalReducer";
+import {
+  setUserInfo,
+  setAccessToken,
+  setRefreshToken,
+} from "../store/globalReducer";
 
 export default function RootLayout() {
   const router = useRouter();
@@ -52,6 +56,11 @@ export default function RootLayout() {
         };
         dispatch(setUserInfo(userInfo));
         dispatch(setAccessToken(response.access_token));
+        if (response.refresh_token) {
+          dispatch(setRefreshToken(response.refresh_token));
+        } else {
+          dispatch(setRefreshToken(refreshToken)); // Xóa refresh token nếu không có
+        }
 
         console.log("New access token:", response);
       } catch (error: any) {
@@ -84,9 +93,7 @@ export default function RootLayout() {
 
         const accessToken = await SecureStore.getItemAsync("access_token");
         console.log("access token", accessToken);
-        const refreshToken = await SecureStore.getItemAsync(
-          "refresh_token"
-        );
+        const refreshToken = await SecureStore.getItemAsync("refresh_token");
         console.log("refresh token", refreshToken);
 
         if (accessToken != null) {
@@ -117,6 +124,14 @@ export default function RootLayout() {
                 };
                 dispatch(setUserInfo(userInfo));
                 dispatch(setAccessToken(accessToken));
+
+                const refreshToken = await SecureStore.getItemAsync(
+                  "refresh_token"
+                );
+                if (refreshToken) {
+                  dispatch(setRefreshToken(refreshToken));
+                }
+
                 console.log("token_payload", res);
               } else {
                 // Token hết hạn, xử lý refresh token
@@ -159,7 +174,7 @@ export default function RootLayout() {
         AsyncStorage.removeItem("user_info");
         SecureStore.deleteItemAsync("access_token");
         SecureStore.deleteItemAsync("refresh_token");
-        
+
         router.replace("/login" as any);
       }
     }
@@ -168,7 +183,7 @@ export default function RootLayout() {
   return (
     <View>
       <Text>Loading user data...</Text>
-      <Text>{isLoading ? 'true' : 'false'}</Text>
+      <Text>{isLoading ? "true" : "false"}</Text>
     </View>
   );
 }

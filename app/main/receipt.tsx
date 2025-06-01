@@ -18,6 +18,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import UserInfoCard from "@/components/ui/UserInfo";
 import { AppDispatch, RootState } from "@/store/globalStore";
+import { setAccessToken, setRefreshToken } from "@/store/globalReducer";
 
 import ProductType from "@/types/Product";
 import { SaleLog, SaleLogItem } from "@/types/SaleLog";
@@ -36,7 +37,9 @@ const pages = [
 ];
 
 export default function Explore() {
-  const { userInfo, accessToken } = useSelector((state: RootState) => state.global);
+  const { userInfo, accessToken, refreshToken } = useSelector(
+    (state: RootState) => state.global
+  );
 
   const [permission, requestPermission] = useCameraPermissions();
   const [isScanning, setIsScanning] = useState(true);
@@ -54,7 +57,7 @@ export default function Explore() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [donHang, setDonHang] = useState<SaleLogItem[]>([]);
   const [saleLog, setSaleLog] = useState<SaleLog>({
-    createdAt: '',
+    createdAt: "",
     items: [],
   });
   const [thongBao, setThongBao] = useState("");
@@ -65,10 +68,25 @@ export default function Explore() {
 
     try {
       // Call the API to get product details
-      const product = await productById(productId, accessToken);
+      const product = await productById(
+        productId,
+        accessToken,
+        refreshToken,
+        dispatch,
+        setAccessToken,
+        setRefreshToken
+      );
       setSanPhamTimDuoc(product);
     } catch (error: any) {
       console.error("Error fetching product:", error);
+      if (error.message === "Chưa đăng nhập") {
+        if (router.canDismiss()) {
+          router.dismissAll();
+        }
+        router.replace("/login");
+        return;
+      }
+
       setSanPhamKoTimDuoc(
         error.message || `Không tìm thấy sản phẩm với mã: ${productId}`
       );
@@ -147,12 +165,31 @@ export default function Explore() {
         ...saleLog,
         createdAt: new Date().toISOString(),
       };
-      const response = await postSale(copySaleLog, accessToken);
-
+      let response;
+      try {
+        response = await postSale(
+          copySaleLog,
+          accessToken,
+          refreshToken,
+          dispatch,
+          setAccessToken,
+          setRefreshToken
+        );
+      } catch (error: any) {
+        if (error.message === "Chưa đăng nhập") {
+          if (router.canDismiss()) {
+            router.dismissAll();
+          }
+          router.replace("/login");
+          return;
+        }
+        throw error;
+      }
+      
       // Reset the order
       setDonHang([]);
       setSaleLog({
-        createdAt: '',
+        createdAt: "",
         items: [],
         total: 0,
       });

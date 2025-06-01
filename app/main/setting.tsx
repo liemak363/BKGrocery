@@ -24,8 +24,12 @@ import UserInfoCard from "@/components/ui/UserInfo";
 import InfoCard from "@/components/ui/InfoCard";
 // import WeeklyRevenueCard from '@/components/ui/WeeklyRevenueCard';
 import FeatureItem from "@/components/ui/FeatureItem";
-import BottomNavBar from "@/components/ui/BottomNavBar";
 import * as SecureStore from "expo-secure-store";
+import {
+  setUserInfo,
+  setAccessToken,
+  setRefreshToken,
+} from "@/store/globalReducer";
 
 import { RootState } from "@/store/globalStore";
 
@@ -76,6 +80,9 @@ export default function Explore() {
             await logout(accessToken, refreshToken || "");
 
             await SecureStore.deleteItemAsync("refresh_token");
+            dispatch(setUserInfo({ name: "", id: 0 }));
+            dispatch(setAccessToken(""));
+            dispatch(setRefreshToken(""));
 
             if (router.canDismiss()) {
               router.dismissAll();
