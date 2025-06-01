@@ -14,7 +14,9 @@ interface CustomTabBarProps {
     index: number;
   };
   navigation: {
-    emit: (event: { type: string; target: string }) => { defaultPrevented: boolean };
+    emit: (event: { type: string; target: string }) => {
+      defaultPrevented: boolean;
+    };
     navigate: (name: string) => void;
   };
 }
@@ -66,6 +68,8 @@ export default function Layout() {
         <Tabs.Screen name="receipt" options={{ title: "Receipt" }} />
         <Tabs.Screen name="setting" options={{ title: "Setting" }} />
         <Tabs.Screen name="importLog" options={{ title: "History" }} />
+        <Tabs.Screen name="warehouse" options={{ title: "Warehouse" }} />
+        <Tabs.Screen name="saleLog/index" options={{ title: "Sale Log" }} />
       </Tabs>
     </View>
   );

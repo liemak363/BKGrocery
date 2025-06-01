@@ -12,7 +12,7 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
 
 import { AppDispatch } from "@/store/globalStore";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,7 +23,6 @@ import UserInfoCard from "@/components/ui/UserInfo";
 import InfoCard from "@/components/ui/InfoCard";
 // import WeeklyRevenueCard from '@/components/ui/WeeklyRevenueCard';
 import FeatureItem from "@/components/ui/FeatureItem";
-import BottomNavBar from "@/components/ui/BottomNavBar";
 import * as SecureStore from "expo-secure-store";
 
 import { RootState } from "@/store/globalStore";
@@ -31,21 +30,44 @@ import { RootState } from "@/store/globalStore";
 export default function Explore() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const navigation = useNavigation();
 
   const { userInfo, isSetupLoading } = useSelector(
     (state: RootState) => state.global
   );
 
-  const [activeTab, setActiveTab] = useState("Home");
+  const [activeTab, setActiveTab] = useState("home");
   const [userName, setUserName] = useState("none");
 
-  const handleTabPress = (tab: string) => {
-    console.log(tab);
-    // Map tab names to valid route paths
-    let route: string;
-    route = "./" + tab
-    router.replace(route as any);
-    setActiveTab(tab);
+  // Handle feature item press using tab navigation
+  const handleFeaturePress = (featureName: string) => {
+    let routeName: string;
+
+    switch (featureName.toLowerCase()) {
+      case "warehouse":
+        routeName = "warehouse";
+        break;
+      case "import":
+        routeName = "import";
+        break;
+      case "history":
+        routeName = "saleLog/index";
+        break;
+      case "import log":
+        routeName = "importLog";
+        break;
+      case "receipt":
+        routeName = "receipt";
+        break;
+      case "setting":
+        routeName = "setting";
+        break;
+      default:
+        routeName = "index";
+    }
+
+    // Use navigation.navigate instead of router.replace for tab navigation
+    navigation.navigate(routeName as never);
   };
 
   useEffect(() => {
@@ -115,37 +137,35 @@ export default function Explore() {
               <FeatureItem
                 image={require("../../assets/images/warehouse.png")}
                 label="Warehouse"
-                onPress={() => router.replace('/warehouse' as any)}
-
+                onPress={() => handleFeaturePress("Warehouse")}
               />
 
               <FeatureItem
                 image={require("../../assets/images/import.png")}
                 label="Import"
-                onPress={() => router.replace('/import' as any)}
+                onPress={() => handleFeaturePress("Import")}
               />
               <FeatureItem
                 image={require("../../assets/images/historyicon.png")}
                 label="History"
-                onPress={() => router.replace('/history' as any)}
+                onPress={() => handleFeaturePress("History")}
               />
               <FeatureItem
                 image={require("../../assets/images/scanicon.png")}
                 label="Import Log"
-                onPress={() => router.replace('/importlog' as any)}
+                onPress={() => handleFeaturePress("Import Log")}
               />
               <FeatureItem
                 image={require("../../assets/images/receipicon.png")}
                 label="Receipt"
-                onPress={() => router.replace('/receipt' as any)}
+                onPress={() => handleFeaturePress("Receipt")}
               />
               <FeatureItem
                 image={require("../../assets/images/settingicon.png")}
                 label="Setting"
-                onPress={() => router.replace('/setting' as any)}
+                onPress={() => handleFeaturePress("Setting")}
               />
             </View>
-            
             <Button
               title="reset 363"
               onPress={() => {
@@ -158,7 +178,6 @@ export default function Explore() {
           </View>
         </View>
       </ScrollView>
-      {/* <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} /> */}
     </View>
   );
 }
