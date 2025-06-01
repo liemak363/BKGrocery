@@ -57,6 +57,14 @@ const WareHouseScreen = () => {
       setAllProducts(sortedProducts);
       setFilteredProducts(sortedProducts);
     } catch (error: any) {
+      if (error.message === "Chưa đăng nhập") {
+        if (router.canDismiss()) {
+          router.dismissAll();
+        }
+        router.replace("/login");
+        return;
+      }
+      
       Alert.alert("Lỗi", error.message || "Không thể tải danh sách sản phẩm");
     } finally {
       setIsLoading(false);
