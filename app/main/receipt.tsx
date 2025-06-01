@@ -22,8 +22,10 @@ import { AppDispatch, RootState } from "@/store/globalStore";
 import ProductType from "@/types/Product";
 import { SaleLog, SaleLogItem } from "@/types/SaleLog";
 import { productById } from "@/services/product";
+import { postSale } from "@/services/sale";
 
 import { CameraView, useCameraPermissions, Camera } from "expo-camera";
+import { configureStore } from "@reduxjs/toolkit";
 
 const { width } = Dimensions.get("window");
 const paddingConst = 16; // padding for the FlatList container
@@ -52,7 +54,7 @@ export default function Explore() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [donHang, setDonHang] = useState<SaleLogItem[]>([]);
   const [saleLog, setSaleLog] = useState<SaleLog>({
-    createdAt: new Date().toISOString(),
+    createdAt: '',
     items: [],
   });
   const [thongBao, setThongBao] = useState("");
@@ -139,17 +141,18 @@ export default function Explore() {
     setIsLoading(true);
 
     try {
-      // Here you would call your API to submit the sales order
-      // For example:
-      // await submitSalesOrder(saleLog, accessToken);
-
-      // For now, we'll just simulate a successful submission
       console.log("Submitting order:", JSON.stringify(saleLog));
+
+      const copySaleLog = {
+        ...saleLog,
+        createdAt: new Date().toISOString(),
+      };
+      const response = await postSale(copySaleLog, accessToken);
 
       // Reset the order
       setDonHang([]);
       setSaleLog({
-        createdAt: new Date().toISOString(),
+        createdAt: '',
         items: [],
         total: 0,
       });
@@ -294,7 +297,7 @@ export default function Explore() {
         <View style={styles.subcontainer1}>
           {hienThongBao && (
             <View style={styles.modalThongBao}>
-              <Text style={styles.thongBaoText}>Đã ghi nhận đơn hàng</Text>
+              <Text style={styles.thongBaoText}>{thongBao}</Text>
               <TouchableOpacity
                 onPress={() => setHienThongBao(false)}
                 style={styles.continueBtn}
@@ -465,7 +468,7 @@ export default function Explore() {
         <View style={styles.subcontainer1}>
           {hienThongBao && (
             <View style={styles.modalThongBao}>
-              <Text style={styles.thongBaoText}>Đã ghi nhận đơn hàng</Text>
+              <Text style={styles.thongBaoText}>{thongBao}</Text>
               <TouchableOpacity
                 onPress={() => setHienThongBao(false)}
                 style={styles.continueBtn}
