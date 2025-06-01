@@ -43,7 +43,7 @@ function CustomTabBar({ state, navigation }: CustomTabBarProps) {
   const getActiveTabKey = () => {
     const routeName = state.routes[state.index].name;
     if (routeName === "index") return "home";
-    if (routeName === "importLog") return "history";
+    if (routeName === "importLog") return "importLog";
     return routeName;
   };
 
@@ -67,7 +67,7 @@ export default function Layout() {
         <Tabs.Screen name="import" options={{ title: "Import" }} />
         <Tabs.Screen name="receipt" options={{ title: "Receipt" }} />
         <Tabs.Screen name="setting" options={{ title: "Setting" }} />
-        <Tabs.Screen name="importLog" options={{ title: "History" }} />
+        <Tabs.Screen name="importLog" options={{ title: "ImportLog" }} />
         <Tabs.Screen name="warehouse" options={{ title: "Warehouse" }} />
         <Tabs.Screen name="saleLog/index" options={{ title: "Sale Log" }} />
       </Tabs>

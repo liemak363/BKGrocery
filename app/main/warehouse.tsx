@@ -148,6 +148,8 @@ const WareHouseScreen = () => {
           </View>
         )}
 
+        <View style={{ paddingTop: (StatusBar.currentHeight || 0) + 10 }}></View>
+
         <FlatList
           style={styles.flatListContainer}
           data={filteredProducts}
@@ -155,7 +157,6 @@ const WareHouseScreen = () => {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={{
             paddingHorizontal: 10,
-            paddingTop: 40,
             paddingBottom: 40,
           }}
           ListHeaderComponent={
@@ -257,7 +258,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   refreshButton: {
-    padding: 8,
     borderRadius: 20,
     backgroundColor: "#E8F5E8",
   },
