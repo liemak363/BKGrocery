@@ -24,7 +24,7 @@ import { importLog } from "@/services/import";
 
 import Pagination from "@/components/ui/Pagination";
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 10;
 
 const ImportLogScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -91,14 +91,8 @@ const ImportLogScreen = () => {
         ITEMS_PER_PAGE
       );
 
-      setImportLogs(logs);
-      // Note: You might need to adjust this if the API returns total count
-      // For now, we'll estimate based on the returned data
-      if (logs.length < ITEMS_PER_PAGE) {
-        setTotalItems(offset + logs.length);
-      } else {
-        setTotalItems(1000); // Estimate there might be more
-      }
+      setImportLogs(logs.data);
+      setTotalItems(logs.count);
     } catch (error: any) {
       console.error("Error fetching import logs:", error);
       if (error.message === "Chưa đăng nhập") {

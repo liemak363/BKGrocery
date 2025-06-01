@@ -68,7 +68,7 @@ export async function importLog(
   lastTime: string | null = null,
   offset: number = 0,
   limit: number = 10
-): Promise<ImportLogType[]> {
+): Promise<{ data: ImportLogType[]; count: number }> {
   try {
     const query: { lastTime?: string; offset: string; limit: string } = {
       offset: offset.toString(),
@@ -127,7 +127,7 @@ export async function importLog(
     }
 
     const data = await res.json();
-    return data.data;
+    return data;
   } catch (error) {
     throw error;
   }

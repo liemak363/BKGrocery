@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  StatusBar
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -83,13 +84,8 @@ const SalesHistoryScreen = () => {
         ITEMS_PER_PAGE
       );
 
-      setSaleLogs(logs);
-      // Estimate total items based on returned data
-      if (logs.length < ITEMS_PER_PAGE) {
-        setTotalItems(offset + logs.length);
-      } else {
-        setTotalItems(offset + ITEMS_PER_PAGE + 1); // Estimate there might be more
-      }
+      setSaleLogs(logs.data);
+      setTotalItems(logs.count);
     } catch (error: any) {
       console.error("Error fetching sale logs:", error);
       if (error.message === "Chưa đăng nhập") {
@@ -155,7 +151,7 @@ const SalesHistoryScreen = () => {
 
             <View style={styles.searchBox}>
               <TextInput
-                placeholder="Nhập ngày giờ (YYYY-MM-DD HH:mm) để lọc lịch sử"
+                placeholder="Ngày giờ (YYYY-MM-DD HH:mm)"
                 value={lastTime}
                 onChangeText={setLastTime}
                 style={styles.searchInput}
@@ -209,7 +205,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#ECFCCB",
     paddingHorizontal: 10,
-    paddingTop: 40,
+    paddingTop: (StatusBar.currentHeight || 0) + 10,
     marginBottom: 40,
   },
   header: {
@@ -266,7 +262,7 @@ const styles = StyleSheet.create({
     color: "black",
     fontWeight: "bold",
     textAlign: "center",
-    fontSize: 12,
+    fontSize: 14,
   },
   tableRow: {
     flexDirection: "row",
@@ -279,7 +275,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
     color: "#333",
-    fontSize: 13,
+    fontSize: 14,
   },
   listContainer: {
     paddingBottom: 0,

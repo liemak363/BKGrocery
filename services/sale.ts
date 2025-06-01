@@ -67,7 +67,7 @@ export async function getSaleLogs(
   lastTime: string | null = null,
   offset: number = 0,
   limit: number = 10
-): Promise<SaleLog[]> {
+): Promise<{data: SaleLog[], count: number}> {
   try {
     const query: { lastTime?: string; offset: string; limit: string } = {
       offset: offset.toString(),
@@ -121,7 +121,7 @@ export async function getSaleLogs(
     }
 
     const data = await res.json();
-    return data.data;
+    return data;
   } catch (error: any) {
     throw new Error(error.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
   }
