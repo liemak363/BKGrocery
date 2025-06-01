@@ -9,6 +9,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  StatusBar,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -64,7 +65,7 @@ const WareHouseScreen = () => {
         router.replace("/login");
         return;
       }
-      
+
       Alert.alert("Lỗi", error.message || "Không thể tải danh sách sản phẩm");
     } finally {
       setIsLoading(false);
@@ -148,6 +149,7 @@ const WareHouseScreen = () => {
         )}
 
         <FlatList
+          style={styles.flatListContainer}
           data={filteredProducts}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
@@ -237,14 +239,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#ECFCCB",
+  },
+  flatListContainer: {
+    flex: 1,
     paddingHorizontal: 10,
-    paddingTop: 10,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 50,
+    marginBottom: 20,
   },
   headerText: {
     marginLeft: 15,

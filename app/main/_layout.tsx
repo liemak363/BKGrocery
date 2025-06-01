@@ -27,7 +27,7 @@ function CustomTabBar({ state, navigation }: CustomTabBarProps) {
     // Map tab keys to route names
     let routeName = tabKey;
     if (tabKey === "home") routeName = "index";
-    if (tabKey === "history") routeName = "importLog";
+    if (tabKey === "history") routeName = "saleLog/index";
 
     const event = navigation.emit({
       type: "tabPress",
