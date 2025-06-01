@@ -9,7 +9,6 @@ import {
   ScrollView,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import BottomNavBar from "@/components/ui/BottomNavBar";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/store/globalStore";

@@ -98,7 +98,7 @@ export default function Explore() {
             <UserInfoCard
               name={userName}
               role="Owner"
-              initial={userName[0].toUpperCase()}
+              initial={(userName[0] ?? 'n').toUpperCase()}
               onPress={() => console.log("User card tapped")}
             />
 
