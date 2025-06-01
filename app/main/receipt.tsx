@@ -185,7 +185,7 @@ export default function Explore() {
         }
         throw error;
       }
-      
+
       // Reset the order
       setDonHang([]);
       setSaleLog({
@@ -348,11 +348,10 @@ export default function Explore() {
           {/* <TextInput
             style={styles.input}
             value={sanPhamNhap}
-            onChangeText={setSanPhamNhap}
-            onSubmitEditing={() => timSanPham(sanPhamNhap)}
+            onChangeText={setSanPhamNhap}            onSubmitEditing={() => timSanPham(sanPhamNhap)}
             placeholder="Tên sản phẩm"
           /> */}
-          {/* end */}{" "}
+          {/* end */}
           <View
             style={{
               width: "100%",
