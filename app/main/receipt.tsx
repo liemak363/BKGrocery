@@ -21,7 +21,7 @@ import { AppDispatch, RootState } from "@/store/globalStore";
 import { setAccessToken, setRefreshToken } from "@/store/globalReducer";
 
 import ProductType from "@/types/Product";
-import { SaleLog, SaleLogItem } from "@/types/SaleLog";
+import { SaleLogPost, SaleLogItemPost } from "@/types/SaleLog";
 import { productById } from "@/services/product";
 import { postSale } from "@/services/sale";
 
@@ -55,8 +55,8 @@ export default function Explore() {
   );
   const [sanPhamKoTimDuoc, setSanPhamKoTimDuoc] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [donHang, setDonHang] = useState<SaleLogItem[]>([]);
-  const [saleLog, setSaleLog] = useState<SaleLog>({
+  const [donHang, setDonHang] = useState<SaleLogItemPost[]>([]);
+  const [saleLog, setSaleLog] = useState<SaleLogPost>({
     createdAt: "",
     items: [],
   });
@@ -110,7 +110,7 @@ export default function Explore() {
       (item) => item.productId === sanPhamTimDuoc.id
     );
 
-    let updatedItems: SaleLogItem[];
+    let updatedItems: SaleLogItemPost[];
 
     if (existingItemIndex >= 0) {
       // Update quantity if product already exists
@@ -121,7 +121,7 @@ export default function Explore() {
       };
     } else {
       // Add new product to order
-      const newItem: SaleLogItem = {
+      const newItem: SaleLogItemPost = {
         productId: sanPhamTimDuoc.id.toString(),
         price: sanPhamTimDuoc.price,
         quantity: quantity,

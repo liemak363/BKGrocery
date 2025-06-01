@@ -8,7 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  StatusBar
+  StatusBar,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -17,7 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/globalStore";
 import { setAccessToken, setRefreshToken } from "@/store/globalReducer";
 
-import { SaleLog } from "@/types/SaleLog";
+import { SaleLogResponse } from "@/types/SaleLog";
 import { getSaleLogs } from "@/services/sale";
 
 import Pagination from "@/components/ui/Pagination";
@@ -33,7 +33,7 @@ const SalesHistoryScreen = () => {
   const router = useRouter();
 
   // State for data and pagination
-  const [saleLogs, setSaleLogs] = useState<SaleLog[]>([]);
+  const [saleLogs, setSaleLogs] = useState<SaleLogResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -59,8 +59,8 @@ const SalesHistoryScreen = () => {
   // Format price
   const formatPrice = (price: number) => {
     return price.toLocaleString("vi-VN") + " ₫";
-  }; 
-  
+  };
+
   // Fetch sale logs from API
   const fetchSaleLogs = async () => {
     // Keep lastTime as Vietnam time without timezone conversion
@@ -117,7 +117,13 @@ const SalesHistoryScreen = () => {
     fetchSaleLogs();
   }, [currentPage]);
 
-  const renderItem = ({ item, index }: { item: SaleLog; index: number }) => {
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: SaleLogResponse;
+    index: number;
+  }) => {
     // Calculate sequential number based on current page and index
     const sequentialNumber = (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
 

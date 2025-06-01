@@ -1,132 +1,116 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 
 import { useRouter } from "expo-router";
+
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch } from "@/store/globalStore";
-import Pagination from "@/components/ui/Pagination";
+import { AppDispatch, RootState } from "@/store/globalStore";
+import { setAccessToken, setRefreshToken } from "@/store/globalReducer";
+
+import { SaleLogResponse, SaleLogItemResponse } from "@/types/SaleLog";
+
+import { getSaleLogById } from "@/services/sale";
+
 import { useLocalSearchParams } from "expo-router";
 
-const sampleProducts = [
-  {
-    id: "301",
-    name: "Thùng mì hảo hảo",
-    price: 160000,
-    stock: 30,
-    description: "Tủ hàng ở vị trí hàng 3 góc bên trái, ngăn trên cùng",
-  },
-  {
-    id: "302",
-    name: "Thùng mì omachi",
-    price: 260000,
-    stock: 20,
-    description: "Tủ hàng ở vị trí hàng 3 góc bên trái, ngăn trên cùng",
-  },
-  {
-    id: "303",
-    name: "Thùng mì 3 miền",
-    price: 150000,
-    stock: 25,
-    description: "Tủ hàng ở vị trí hàng 3 góc bên trái, ngăn trên cùng",
-  },
-  {
-    id: "304",
-    name: "Thùng phở Gà",
-    price: 230000,
-    stock: 25,
-    description: "Tủ hàng ở vị trí hàng 3 góc bên trái, ngăn trên cùng",
-  },
-  {
-    id: "305",
-    name: "Gói mì hảo hảo",
-    price: 4800,
-    stock: 300,
-    description: "Tủ hàng ở vị trí hàng 3 góc bên trái, ngăn trên cùng",
-  },
-  {
-    id: "306",
-    name: "Gói omachi",
-    price: 8900,
-    stock: 200,
-    description: "Tủ hàng ở vị trí hàng 3 góc bên trái, ngăn trên cùng",
-  },
-  {
-    id: "307",
-    name: "Kem đánh răng PS",
-    price: 42000,
-    stock: 60,
-    description: "Tủ hàng ở vị trí hàng 3 góc bên trái, ngăn trên cùng",
-  },
-  {
-    id: "308",
-    name: "Kem đánh răng Closeup",
-    price: 40000,
-    stock: 50,
-    description: "Tủ hàng ở vị trí hàng 3 góc bên trái, ngăn trên cùng",
-  },
-  {
-    id: "309",
-    name: "Dao gọt trái cây",
-    price: 60000,
-    stock: 10,
-    description: "Tủ hàng ở vị trí hàng 3 góc bên trái, ngăn trên cùng",
-  },
-  {
-    id: "310",
-    name: "Hộp bông ngoài tai",
-    price: 24000,
-    stock: 30,
-    description: "Tủ hàng ở vị trí hàng 3 góc bên trái, ngăn trên cùng",
-  },
-];
-
-//data mẫu
-const mockSaleLog = {
-  saleLogId: "001",
-  userId: "u001",
-  userName: "Nguyễn Văn A",
-  transactionTime: "15:30 14/04/2002",
-  items: [
-    {
-      productId: "001",
-      productName: "Thùng mì Hảo Hảo",
-      quantity: 1,
-      price: 160000,
-    },
-    {
-      productId: "002",
-      productName: "Dầu ăn",
-      quantity: 3,
-      price: 135000,
-    },
-    {
-      productId: "003",
-      productName: "Bịch muối",
-      quantity: 1,
-      price: 5000,
-    },
-  ],
-};
-
 const SaleLogIttemScreen = () => {
-  const { id } = useLocalSearchParams(); //id lấy được từ url
+  const { id } = useLocalSearchParams();
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
-
-  const totalAmount = mockSaleLog.items.reduce(
-    (sum, item) => sum + item.price,
-    0
+  const { accessToken, refreshToken } = useSelector(
+    (state: RootState) => state.global
   );
 
+  const router = useRouter();
+
+  // State management
+  const [saleLog, setSaleLog] = useState<SaleLogResponse | null>(null);
+  const [items, setItems] = useState<SaleLogItemResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch sale log details
+  useEffect(() => {
+    const fetchSaleLogDetails = async () => {
+      if (!id || typeof id !== "string") {
+        setError("ID giao dịch không hợp lệ");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await getSaleLogById(
+          accessToken,
+          refreshToken,
+          dispatch,
+          setAccessToken,
+          setRefreshToken,
+          id
+        );
+
+        setSaleLog(response.saleLog);
+        setItems(response.items);
+      } catch (err: any) {
+        setError(err.message || "Không thể tải chi tiết giao dịch");
+        Alert.alert("Lỗi", err.message || "Không thể tải chi tiết giao dịch");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSaleLogDetails();
+  }, [id, accessToken, refreshToken, dispatch]);
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#22c55e" />
+        <Text style={styles.loadingText}>Đang tải chi tiết giao dịch...</Text>
+      </View>
+    );
+  }
+
+  // Error state
+  if (error || !saleLog) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Icon name="alert-circle-outline" size={64} color="#ef4444" />
+        <Text style={styles.errorText}>
+          {error || "Không tìm thấy giao dịch"}
+        </Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.retryButtonText}>Quay lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
   return (
     <View style={{ flex: 1, backgroundColor: "#ECFCCB" }}>
       <View style={styles.container}>
@@ -136,12 +120,15 @@ const SaleLogIttemScreen = () => {
           </TouchableOpacity>
           <Text style={styles.headerText}>Chi tiết đơn hàng</Text>
         </View>
+
         <View style={styles.infoBlock}>
-          <Text>MÃ ĐƠN HÀNG: {id}</Text>
-          <Text>TÊN NGƯỜI BÁN: {mockSaleLog.userName}</Text>
-          <Text>THỜI GIAN GIAO DỊCH: {mockSaleLog.transactionTime}</Text>
+          <Text style={styles.infoText}>
+            THỜI GIAN GIAO DỊCH: {formatDate(saleLog.createdAt)}
+          </Text>
         </View>
+
         <Text style={styles.paymentHeader}>ĐƠN THANH TOÁN</Text>
+
         <View style={styles.tableContainer}>
           <View style={styles.tableHeader}>
             <Text style={styles.headerCell}>STT</Text>
@@ -151,22 +138,25 @@ const SaleLogIttemScreen = () => {
           </View>
 
           <FlatList
-            data={mockSaleLog.items}
-            keyExtractor={(item) => item.productId}
+            data={items}
+            keyExtractor={(item) => `${item.saleLogId}-${item.productId}`}
             renderItem={({ item, index }) => (
               <View style={styles.tableRow}>
                 <Text style={styles.cell}>{index + 1}</Text>
                 <Text style={styles.cell}>{item.productName}</Text>
                 <Text style={styles.cell}>{item.quantity}</Text>
                 <Text style={styles.cell}>
-                  {item.price.toLocaleString()} vnd
+                  {item.total.toLocaleString()} vnd
                 </Text>
               </View>
             )}
           />
-          <View style={styles.tableRow}>
-            <Text style={styles.cell}>Tổng tiền</Text>
-            <Text style={styles.cell}>{totalAmount.toLocaleString()} vnd</Text>
+
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Tổng tiền</Text>
+            <Text style={styles.totalAmount}>
+              {saleLog.total.toLocaleString()} vnd
+            </Text>
           </View>
         </View>
       </View>
@@ -182,9 +172,52 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     marginBottom: 100,
   },
-  header: { flexDirection: "row", alignItems: "center", marginBottom: 50 },
-  headerText: { marginLeft: 15, fontSize: 20, fontWeight: "bold" },
-
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 50,
+  },
+  headerText: {
+    marginLeft: 15,
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  infoBlock: {
+    marginBottom: 30,
+  },
+  infoText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 5,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#ef4444",
+    textAlign: "center",
+  },
+  retryButton: {
+    marginTop: 20,
+    backgroundColor: "#22c55e",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   tableContainer: {
     marginTop: 16,
     marginBottom: 30,
@@ -220,15 +253,33 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#333",
   },
+  totalRow: {
+    flexDirection: "row",
+    backgroundColor: "#e5f3ff",
+    paddingVertical: 12,
+    borderTopWidth: 2,
+    borderTopColor: "#22c55e",
+  },
+  totalLabel: {
+    flex: 2,
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 16,
+    color: "#333",
+  },
+  totalAmount: {
+    flex: 2,
+    textAlign: "center",
+    fontWeight: "bold",
+    fontSize: 16,
+    color: "#22c55e",
+  },
   paymentHeader: {
     color: "green",
     fontWeight: "bold",
     fontSize: 18,
     marginBottom: 20,
     textAlign: "center",
-  },
-  infoBlock: {
-    marginBottom: 30,
   },
 });
 
