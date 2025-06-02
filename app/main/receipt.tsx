@@ -14,6 +14,7 @@ import {
   KeyboardAvoidingView,
   SafeAreaView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,7 +26,7 @@ import { setAccessToken, setRefreshToken } from "@/store/globalReducer";
 
 import ProductType from "@/types/Product";
 import { SaleLogPost, SaleLogItemPost } from "@/types/SaleLog";
-import { productById } from "@/services/product";
+import { productById, productByName } from "@/services/product";
 import { postSale } from "@/services/sale";
 
 import { CameraView, useCameraPermissions, Camera } from "expo-camera";
@@ -51,7 +52,7 @@ export default function Explore() {
   const [appState, setAppState] = useState(AppState.currentState);
   const appStateRef = useRef(AppState.currentState);
   // cho don thanh toan
-  const [sanPhamNhap, setSanPhamNhap] = useState("");
+  const [sanPhamNhap, setSanPhamNhap] = useState(""); // Input for product name (name search) or ID (QR scan)
   const [soLuongNhap, setSoLuongNhap] = useState("");
   const [sanPhamTimDuoc, setSanPhamTimDuoc] = useState<ProductType | null>(
     null
@@ -65,12 +66,123 @@ export default function Explore() {
   });
   const [thongBao, setThongBao] = useState("");
   const [hienThongBao, setHienThongBao] = useState(false);
+
+  // State for name search
+  const [searchResults, setSearchResults] = useState<ProductType[]>([]);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false); // Specific loading for name search
+
+  // State for selected tab index
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+
+  // Debounced search for product by name (for "Nhập sản phẩm" tab)
+  useEffect(() => {
+    const searchName = sanPhamNhap.trim();
+    // Only search if on "Nhập sản phẩm" tab (selectedIndex === 1), input is long enough, and no product is currently selected
+    if (searchName.length < 2 || selectedIndex !== 1 || sanPhamTimDuoc) {
+      setSearchResults([]);
+      setIsDropdownVisible(false);
+      // Don't clear sanPhamKoTimDuoc here as it might be from other actions or deliberately set
+      return;
+    }
+
+    const handler = setTimeout(async () => {
+      // Re-check conditions inside timeout, as state might change rapidly
+      if (
+        sanPhamNhap.trim().length >= 2 &&
+        selectedIndex === 1 &&
+        !sanPhamTimDuoc
+      ) {
+        setIsLoadingSearch(true);
+        setSanPhamKoTimDuoc(null); // Clear previous messages
+        setSearchResults([]); // Clear previous results
+        setIsDropdownVisible(false); // Hide dropdown until new results
+
+        try {
+          const products = await productByName(
+            sanPhamNhap.trim(),
+            accessToken,
+            refreshToken,
+            dispatch,
+            setAccessToken,
+            setRefreshToken
+          );
+          setSearchResults(products);
+          if (products.length > 0) {
+            setIsDropdownVisible(true);
+            setSanPhamKoTimDuoc(null); // Clear "not found" if products are found
+          } else {
+            setIsDropdownVisible(false);
+            setSanPhamKoTimDuoc(
+              `Không tìm thấy sản phẩm nào với tên: "${sanPhamNhap.trim()}"`
+            );
+          }
+        } catch (error: any) {
+          console.error("Error fetching product by name:", error);
+          setSearchResults([]);
+          setIsDropdownVisible(false);
+          if (error.message === "Chưa đăng nhập") {
+            if (router.canDismiss()) {
+              router.dismissAll();
+            }
+            router.replace("/login");
+            return;
+          }
+          setSanPhamKoTimDuoc(
+            error.message ||
+              `Lỗi khi tìm sản phẩm với tên: "${sanPhamNhap.trim()}"`
+          );
+        } finally {
+          setIsLoadingSearch(false);
+        }
+      }
+    }, 500); // 500ms debounce
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [
+    sanPhamNhap,
+    selectedIndex,
+    accessToken,
+    refreshToken,
+    dispatch,
+    sanPhamTimDuoc,
+  ]);
+
+  // Handler for product name input changes (on "Nhập sản phẩm" tab)
+  const handleProductNameInputChange = (text: string) => {
+    setSanPhamNhap(text);
+    // If a product was selected, and user types something different, clear the selection
+    if (sanPhamTimDuoc && text.trim() !== sanPhamTimDuoc.name) {
+      setSanPhamTimDuoc(null);
+      setSoLuongNhap("");
+      setSanPhamKoTimDuoc(null); // Clear message, new search will be triggered by useEffect
+    } else if (!sanPhamTimDuoc && text.trim().length < 2) {
+      // If no product selected and text is too short for search
+      setSearchResults([]);
+      setIsDropdownVisible(false);
+      if (!text.trim()) {
+        // If input is completely empty
+        setSanPhamKoTimDuoc(null); // Clear any "not found by name" message
+      }
+    }
+  };
+
+  // Search product by ID (for QR Scan tab)
   const timSanPham = async (productId: string) => {
-    setSanPhamKoTimDuoc(null);
-    setIsLoading(true);
+    setSanPhamKoTimDuoc(null); // Clear any previous message
+    setIsLoading(true); // Use generic loading state
+
+    // Clear name search specific states
+    setSearchResults([]);
+    setIsDropdownVisible(false);
+    // sanPhamNhap will be updated to product name on success, or retain productId on failure.
 
     try {
-      // Call the API to get product details
       const product = await productById(
         productId,
         accessToken,
@@ -80,8 +192,11 @@ export default function Explore() {
         setRefreshToken
       );
       setSanPhamTimDuoc(product);
+      setSanPhamNhap(product.name); // Update input to show found product's name
+      setSoLuongNhap(""); // Reset quantity input for the new product
     } catch (error: any) {
-      console.error("Error fetching product:", error);
+      console.error("Error fetching product by ID:", error);
+      setSanPhamTimDuoc(null);
       if (error.message === "Chưa đăng nhập") {
         if (router.canDismiss()) {
           router.dismissAll();
@@ -89,7 +204,6 @@ export default function Explore() {
         router.replace("/login");
         return;
       }
-
       setSanPhamKoTimDuoc(
         error.message || `Không tìm thấy sản phẩm với mã: ${productId}`
       );
@@ -97,6 +211,18 @@ export default function Explore() {
       setIsLoading(false);
     }
   };
+
+  // Handler for selecting a product from the name search dropdown
+  const handleSelectProductFromDropdown = (product: ProductType) => {
+    setSanPhamTimDuoc(product);
+    setSanPhamNhap(product.name); // Update input to reflect selection
+    setIsDropdownVisible(false);
+    setSearchResults([]);
+    setSoLuongNhap(""); // Reset quantity for the new product
+    setSanPhamKoTimDuoc(null); // Clear any "not found" messages
+    // Consider Keyboard.dismiss();
+  };
+
   const themSanPham = () => {
     if (!sanPhamTimDuoc) return;
 
@@ -216,13 +342,7 @@ export default function Explore() {
   const huyDonHang = () => {
     setDonHang([]);
     setSaleLog({
-      createdAt: new Date().toLocaleString("vi-VN", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      createdAt: "",
       items: [],
       total: 0,
     });
@@ -231,6 +351,9 @@ export default function Explore() {
     setSanPhamTimDuoc(null);
     setSanPhamKoTimDuoc(null);
     setErrorMessage(null);
+    // Clear name search state as well
+    setSearchResults([]);
+    setIsDropdownVisible(false);
   };
 
   const tongTien = donHang.reduce(
@@ -239,15 +362,14 @@ export default function Explore() {
   );
 
   // hiệu ứng
-  const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
+  // const dispatch = useDispatch<AppDispatch>(); // Already defined above
+  // const router = useRouter(); // Already defined above
 
   const [activeTab, setActiveTab] = useState("Home");
   const [userName, setUserName] = useState("none");
 
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const tabWidth = width / pages.length;
   const onViewRef = useRef(({ viewableItems }: any) => {
@@ -386,8 +508,7 @@ export default function Explore() {
                     console.log("Scanned data:", data);
                     if (isScanning) {
                       setIsScanning(false); // tránh quét nhiều lần
-                      setSanPhamNhap(data); // điền vào state
-                      timSanPham(data); // gọi hàm tìm
+                      timSanPham(data); // gọi hàm tìm bằng ID
                       setTimeout(() => setIsScanning(true), 3000); // cho phép quét lại sau 3s
                     }
                   }}
@@ -413,9 +534,10 @@ export default function Explore() {
               </TouchableOpacity>
             )}
           </View>
-          {sanPhamKoTimDuoc && (
-            <Text style={styles.errorMessage}>{sanPhamKoTimDuoc}</Text>
-          )}
+          {sanPhamKoTimDuoc &&
+            !sanPhamTimDuoc && ( // Show if message exists and no product is selected
+              <Text style={styles.errorMessage}>{sanPhamKoTimDuoc}</Text>
+            )}
           {sanPhamTimDuoc && (
             <View style={styles.popup}>
               <Text>TÊN SẢN PHẨM: {sanPhamTimDuoc.name}</Text>
@@ -445,7 +567,11 @@ export default function Explore() {
               <View style={styles.buttonRow}>
                 <TouchableOpacity
                   style={styles.cancelBtn}
-                  onPress={() => setSanPhamTimDuoc(null)}
+                  onPress={() => {
+                    setSanPhamTimDuoc(null);
+                    setSanPhamNhap("");
+                    setSoLuongNhap("");
+                  }}
                 >
                   <Text style={styles.whiteText}>Hủy</Text>
                 </TouchableOpacity>
@@ -532,14 +658,50 @@ export default function Explore() {
           <TextInput
             style={styles.input}
             value={sanPhamNhap}
-            onChangeText={setSanPhamNhap}
-            onSubmitEditing={() => timSanPham(sanPhamNhap)}
-            placeholder="Tên sản phẩm"
+            onChangeText={handleProductNameInputChange} // Use the new handler
+            placeholder="Nhập tên sản phẩm (ít nhất 2 ký tự)"
             returnKeyType="search"
+            // onSubmitEditing is not needed as search is debounced via useEffect
           />
-          {sanPhamKoTimDuoc && (
+
+          {isLoadingSearch && (
+            <ActivityIndicator
+              size="small"
+              color="#4D7C0F"
+              style={{ marginVertical: 5 }}
+            />
+          )}
+
+          {isDropdownVisible && searchResults.length > 0 && (
+            <View style={styles.dropdownContainer}>
+              <FlatList
+                data={searchResults}
+                keyExtractor={(p) => p.id.toString()}
+                renderItem={({ item: productItem }) => (
+                  <TouchableOpacity
+                    style={styles.dropdownItem}
+                    onPress={() => handleSelectProductFromDropdown(productItem)}
+                  >
+                    <Text style={styles.dropdownItemText}>
+                      {productItem.name}
+                    </Text>
+                    <Text style={styles.dropdownItemPrice}>
+                      {productItem.price.toLocaleString()} VND
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                style={styles.dropdownList}
+                keyboardShouldPersistTaps="handled" // Important for press events in ScrollView/FlatList
+              />
+            </View>
+          )}
+
+          {/* Show "not found" message if it exists, dropdown is not visible, and no product is selected */}
+          {sanPhamKoTimDuoc && !isDropdownVisible && !sanPhamTimDuoc && (
             <Text style={styles.errorMessage}>{sanPhamKoTimDuoc}</Text>
           )}
+
+          {/* Product details and quantity input (shown when sanPhamTimDuoc is set) */}
           {sanPhamTimDuoc && (
             <View style={styles.popup}>
               <Text>TÊN SẢN PHẨM: {sanPhamTimDuoc.name}</Text>
@@ -569,7 +731,11 @@ export default function Explore() {
               <View style={styles.buttonRow}>
                 <TouchableOpacity
                   style={styles.cancelBtn}
-                  onPress={() => setSanPhamTimDuoc(null)}
+                  onPress={() => {
+                    setSanPhamTimDuoc(null);
+                    setSanPhamNhap("");
+                    setSoLuongNhap("");
+                  }}
                 >
                   <Text style={styles.whiteText}>Hủy</Text>
                 </TouchableOpacity>
@@ -921,5 +1087,38 @@ const styles = StyleSheet.create({
     color: "#555555",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  // Styles for dropdown
+  dropdownContainer: {
+    width: "100%",
+    maxHeight: 200,
+    backgroundColor: "#fff",
+    borderColor: "#4D7C0F", // Match input border color
+    borderWidth: 1,
+    borderRadius: 8,
+    marginTop: -10, // Overlap slightly with the input or adjust as needed
+    marginBottom: 10,
+    zIndex: 1000, // Ensure dropdown is on top of other elements
+  },
+  dropdownList: {
+    width: "100%",
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    flex: 1, // Allow text to wrap if too long
+  },
+  dropdownItemPrice: {
+    fontSize: 16,
+    color: "green",
+    marginLeft: 10, // Space between name and price
   },
 });

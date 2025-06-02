@@ -165,7 +165,7 @@ export default function Explore() {
                 onPress={() => handleFeaturePress("Setting")}
               />
             </View>
-            <Button
+            {/* <Button
               title="reset 363"
               onPress={() => {
                 AsyncStorage.removeItem("isFirstInstall");
@@ -173,7 +173,7 @@ export default function Explore() {
                 SecureStore.deleteItemAsync("access_token");
                 SecureStore.deleteItemAsync("refresh_token");
               }}
-            />
+            /> */}
           </View>
         </View>
       </ScrollView>

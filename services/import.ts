@@ -48,6 +48,11 @@ export async function importProduct(
       });
     }
 
+    if (res.status === 400) {
+      const resData = await res.json();
+      throw new Error(resData.message ?? "Nhập sản phẩm không thành công, xin thử lại");
+    }
+
     if (!res.ok) {
       throw new Error("Nhập sản phẩm không thành công, xin thử lại");
     }
