@@ -76,6 +76,66 @@ export async function productById(
   }
 }
 
+export async function productByName(
+  name: string,
+  accessToken: string,
+  refreshToken: string,
+  dispatch: any,
+  setAccessToken: any,
+  setRefreshToken: any
+): Promise<ProductType[]> {
+  try {
+    let res = await fetch(
+      `${process.env.EXPO_PUBLIC_BACKEND_URL}product?name=${name}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (res.status === 401) {
+      // Token hết hạn, lấy token mới
+      let response;
+      try {
+        response = await getNewAccessToken(refreshToken);
+      } catch (error: any) {
+        throw new Error("Chưa đăng nhập");
+      }
+
+      if (response.refresh_token) {
+        await SecureStore.setItemAsync("refresh_token", response.refresh_token);
+        dispatch(setRefreshToken(response.refresh_token));
+      }
+      await SecureStore.setItemAsync("access_token", response.access_token);
+      dispatch(setAccessToken(response.access_token));
+
+      // Gọi lại API với token mới
+      res = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_URL}product?name=${name}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${response.access_token}`,
+          },
+        }
+      );
+    }
+
+    if (!res.ok) {
+      throw new Error("Lấy sản phẩm không thành công, xin thử lại");
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message || "Đã xảy ra lỗi. Vui lòng thử lại sau.");
+  }
+} 
+
 export async function products(
   accessToken: string,
   refreshToken: string,
