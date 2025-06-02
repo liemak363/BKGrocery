@@ -12,6 +12,9 @@ import {
   Dimensions,
   AppState,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  SafeAreaView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -271,236 +274,247 @@ export default function ImportScreen() {
     }
   }, [showScanner, permission?.granted]);
   return (
-    <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="#4D7C0F"
-        translucent
-      />
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#ECFCCB" }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        <View style={styles.container}>
+          <StatusBar
+            barStyle="light-content"
+            backgroundColor="#4D7C0F"
+            translucent
+          />
 
-      {/* Success Notification */}
-      {showNotification && (
-        <View style={styles.notification}>
-          <Text style={styles.notificationText}>{notificationMessage}</Text>
-        </View>
-      )}
-
-      {/* Camera Scanner Modal */}
-      <Modal visible={showScanner} animationType="slide" transparent={false}>
-        <View style={styles.scannerModalContainer}>
-          <StatusBar barStyle="light-content" backgroundColor="#000" />
-
-          {permission?.granted ? (
-            <View style={styles.cameraContainer}>
-              {cameraActive && (
-                <CameraView
-                  style={styles.camera}
-                  facing="back"
-                  onBarcodeScanned={
-                    isScanning ? handleBarCodeScanned : undefined
-                  }
-                  barcodeScannerSettings={{
-                    barcodeTypes: [
-                      "code128",
-                      "code39",
-                      "code93",
-                      "ean13",
-                      "ean8",
-                    ],
-                  }}
-                />
-              )}
-
-              <View style={styles.scannerOverlay}>
-                <View style={styles.scannerFrame} />
-                <Text style={styles.scannerText}>
-                  Đưa mã barcode vào khung để quét
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={styles.closeScannerButton}
-                onPress={() => setShowScanner(false)}
-              >
-                <Ionicons name="close" size={30} color="white" />
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.permissionContainer}>
-              <Text style={styles.permissionText}>
-                Cần quyền truy cập camera để quét mã
-              </Text>
-              <TouchableOpacity
-                style={styles.permissionButton}
-                onPress={requestPermission}
-              >
-                <Text style={styles.permissionButtonText}>Cấp quyền</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowScanner(false)}
-              >
-                <Text style={styles.cancelButtonText}>Hủy</Text>
-              </TouchableOpacity>
+          {/* Success Notification */}
+          {showNotification && (
+            <View style={styles.notification}>
+              <Text style={styles.notificationText}>{notificationMessage}</Text>
             </View>
           )}
-        </View>
-      </Modal>
 
-      {/* Main Content */}
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Text style={styles.title}>Nhập vào kho</Text>
+          {/* Camera Scanner Modal */}
+          <Modal
+            visible={showScanner}
+            animationType="slide"
+            transparent={false}
+          >
+            <View style={styles.scannerModalContainer}>
+              <StatusBar barStyle="light-content" backgroundColor="#000" />
 
-        {/* QR Scanner Button */}
-        <View style={styles.qrBox}>
-          <Ionicons name="qr-code-outline" size={64} color="white" />
-        </View>
+              {permission?.granted ? (
+                <View style={styles.cameraContainer}>
+                  {cameraActive && (
+                    <CameraView
+                      style={styles.camera}
+                      facing="back"
+                      onBarcodeScanned={
+                        isScanning ? handleBarCodeScanned : undefined
+                      }
+                      barcodeScannerSettings={{
+                        barcodeTypes: [
+                          "code128",
+                          "code39",
+                          "code93",
+                          "ean13",
+                          "ean8",
+                        ],
+                      }}
+                    />
+                  )}
 
-        <TouchableOpacity
-          style={styles.scanButton}
-          onPress={() => setShowScanner(true)}
-          disabled={isLoading}
-        >
-          <Ionicons name="scan" size={18} color="white" />
-          <Text style={styles.scanButtonText}>Quét mã sản phẩm</Text>
-        </TouchableOpacity>
+                  <View style={styles.scannerOverlay}>
+                    <View style={styles.scannerFrame} />
+                    <Text style={styles.scannerText}>
+                      Đưa mã barcode vào khung để quét
+                    </Text>
+                  </View>
 
-        {/* Manual Product ID Input */}
-        <View style={styles.manualInputContainer}>
-          <Text style={styles.label}>HOẶC NHẬP MÃ SẢN PHẨM THỦ CÔNG</Text>
-          <View style={styles.inputRow}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              value={scannedProductId}
-              onChangeText={setScannedProductId}
-              placeholder="Nhập mã sản phẩm"
-            />
+                  <TouchableOpacity
+                    style={styles.closeScannerButton}
+                    onPress={() => setShowScanner(false)}
+                  >
+                    <Ionicons name="close" size={30} color="white" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.permissionContainer}>
+                  <Text style={styles.permissionText}>
+                    Cần quyền truy cập camera để quét mã
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.permissionButton}
+                    onPress={requestPermission}
+                  >
+                    <Text style={styles.permissionButtonText}>Cấp quyền</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => setShowScanner(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>Hủy</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </Modal>
+
+          {/* Main Content */}
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={styles.title}>Nhập vào kho</Text>
+            {/* QR Scanner Button */}
+            <View style={styles.qrBox}>
+              <Ionicons name="qr-code-outline" size={64} color="white" />
+            </View>
             <TouchableOpacity
-              style={styles.searchButton}
-              onPress={() => searchProduct(scannedProductId)}
-              disabled={isLoading || !scannedProductId.trim()}
-            >
-              <Ionicons name="search" size={20} color="white" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Loading Indicator */}
-        {isLoading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#2C9B1F" />
-            <Text style={styles.loadingText}>Đang xử lý...</Text>
-          </View>
-        )}
-
-        {/* Product Not Found */}
-        {productNotFound && (
-          <View style={styles.statusContainer}>
-            <Text style={styles.newProductText}>{productNotFound}</Text>
-          </View>
-        )}
-
-        {/* Found Product Info */}
-        {foundProduct && (
-          <View style={styles.statusContainer}>
-            <Text style={styles.foundProductText}>
-              Tìm thấy sản phẩm: {foundProduct.name}
-            </Text>
-            <Text style={styles.foundProductSubText}>
-              Giá hiện tại: {foundProduct.price.toLocaleString("vi-VN")} ₫
-            </Text>
-          </View>
-        )}
-
-        {/* Product Form */}
-        {(foundProduct || productNotFound) && (
-          <>
-            <Text style={styles.label}>
-              {isExistingProduct ? "TÊN HIỆN TẠI:" : "NHẬP TÊN SẢN PHẨM"}
-              {isExistingProduct && foundProduct && ` ${foundProduct.name}`}
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={productName}
-              onChangeText={setProductName}
-              placeholder={
-                isExistingProduct
-                  ? "Để trống nếu không thay đổi"
-                  : "Tên sản phẩm (bắt buộc)"
-              }
-            />
-
-            <Text style={styles.label}>NHẬP SỐ LƯỢNG</Text>
-            <TextInput
-              style={styles.input}
-              value={quantity}
-              onChangeText={setQuantity}
-              placeholder="0 (để trống nếu chỉ cập nhật giá)"
-              keyboardType="numeric"
-            />
-
-            <Text style={styles.label}>
-              {isExistingProduct ? "GIÁ HIỆN TẠI:" : "NHẬP GIÁ"}
-              {isExistingProduct &&
-                foundProduct &&
-                ` ${foundProduct.price.toLocaleString("vi-VN")} ₫`}
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={price}
-              onChangeText={setPrice}
-              placeholder={
-                isExistingProduct
-                  ? "Để trống nếu không thay đổi"
-                  : "Giá (bắt buộc)"
-              }
-              keyboardType="numeric"
-            />
-
-            <Text style={styles.label}>MÔ TẢ VỊ TRÍ</Text>
-            <TextInput
-              style={styles.textarea}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Mô tả vị trí để sản phẩm"
-              multiline
-              numberOfLines={3}
-            />
-
-            <TouchableOpacity
-              style={[
-                styles.confirmButton,
-                isLoading && styles.confirmButtonDisabled,
-              ]}
-              onPress={handleImportProduct}
+              style={styles.scanButton}
+              onPress={() => setShowScanner(true)}
               disabled={isLoading}
             >
-              <Text style={styles.confirmButtonText}>
-                {isLoading ? "Đang xử lý..." : "Xác nhận nhập kho"}
-              </Text>
+              <Ionicons name="scan" size={18} color="white" />
+              <Text style={styles.scanButtonText}>Quét mã sản phẩm</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.resetButton} onPress={resetForm}>
-              <Text style={styles.resetButtonText}>Làm mới</Text>
-            </TouchableOpacity>
-          </>
-        )}
-      </ScrollView>
-    </View>
+            {/* Manual Product ID Input */}
+            <View style={styles.manualInputContainer}>
+              <Text style={styles.label}>HOẶC NHẬP MÃ SẢN PHẨM THỦ CÔNG</Text>
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  value={scannedProductId}
+                  onChangeText={setScannedProductId}
+                  placeholder="Nhập mã sản phẩm"
+                  returnKeyType="search"
+                  onSubmitEditing={() => searchProduct(scannedProductId)}
+                />
+                <TouchableOpacity
+                  style={styles.searchButton}
+                  onPress={() => searchProduct(scannedProductId)}
+                  disabled={isLoading || !scannedProductId.trim()}
+                >
+                  <Ionicons name="search" size={20} color="white" />
+                </TouchableOpacity>
+              </View>
+            </View>
+            {/* Loading Indicator */}
+            {isLoading && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#2C9B1F" />
+                <Text style={styles.loadingText}>Đang xử lý...</Text>
+              </View>
+            )}
+            {/* Product Not Found */}
+            {productNotFound && (
+              <View style={styles.statusContainer}>
+                <Text style={styles.newProductText}>{productNotFound}</Text>
+              </View>
+            )}
+            {/* Found Product Info */}
+            {foundProduct && (
+              <View style={styles.statusContainer}>
+                <Text style={styles.foundProductText}>
+                  Tìm thấy sản phẩm: {foundProduct.name}
+                </Text>
+                <Text style={styles.foundProductSubText}>
+                  Giá hiện tại: {foundProduct.price.toLocaleString("vi-VN")} ₫
+                </Text>
+              </View>
+            )}
+            {/* Product Form */}
+            {(foundProduct || productNotFound) && (
+              <>
+                <Text style={styles.label}>
+                  {isExistingProduct ? "TÊN HIỆN TẠI:" : "NHẬP TÊN SẢN PHẨM"}
+                  {isExistingProduct && foundProduct && ` ${foundProduct.name}`}
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  value={productName}
+                  onChangeText={setProductName}
+                  placeholder={
+                    isExistingProduct
+                      ? "Để trống nếu không thay đổi"
+                      : "Tên sản phẩm (bắt buộc)"
+                  }
+                  returnKeyType="next"
+                />
+                <Text style={styles.label}>NHẬP SỐ LƯỢNG</Text>
+                <TextInput
+                  style={styles.input}
+                  value={quantity}
+                  onChangeText={setQuantity}
+                  placeholder="0 (để trống nếu chỉ cập nhật giá)"
+                  keyboardType="numeric"
+                  returnKeyType="next"
+                />
+                <Text style={styles.label}>
+                  {isExistingProduct ? "GIÁ HIỆN TẠI:" : "NHẬP GIÁ"}
+                  {isExistingProduct &&
+                    foundProduct &&
+                    ` ${foundProduct.price.toLocaleString("vi-VN")} ₫`}
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  value={price}
+                  onChangeText={setPrice}
+                  placeholder={
+                    isExistingProduct
+                      ? "Để trống nếu không thay đổi"
+                      : "Giá (bắt buộc)"
+                  }
+                  keyboardType="numeric"
+                  returnKeyType="next"
+                />
+                <Text style={styles.label}>MÔ TẢ VỊ TRÍ</Text>
+                <TextInput
+                  style={styles.textarea}
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholder="Mô tả vị trí để sản phẩm"
+                  multiline
+                  numberOfLines={3}
+                  returnKeyType="done"
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.confirmButton,
+                    isLoading && styles.confirmButtonDisabled,
+                  ]}
+                  onPress={handleImportProduct}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.confirmButtonText}>
+                    {isLoading ? "Đang xử lý..." : "Xác nhận nhập kho"}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.resetButton}
+                  onPress={resetForm}
+                >
+                  <Text style={styles.resetButtonText}>Làm mới</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F1FFD4",
+    backgroundColor: "#ECFCCB",
   },
   scrollContainer: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingVertical: 30,
+    paddingBottom: 50,
     alignItems: "center",
   },
   title: {
