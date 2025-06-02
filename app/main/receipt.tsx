@@ -11,6 +11,9 @@ import {
   ScrollView,
   TextInput,
   AppState,
+  KeyboardAvoidingView,
+  SafeAreaView,
+  Platform,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
@@ -329,11 +332,15 @@ export default function Explore() {
       flatListRef.current.scrollToIndex({ index });
     }
   };
-
   const renderItem = ({ item }: { item: { key: string; title: string } }) => (
     <ScrollView
       style={styles.page}
-      contentContainerStyle={{ alignItems: "center", justifyContent: "center" }}
+      contentContainerStyle={{
+        alignItems: "center",
+        justifyContent: "center",
+        paddingBottom: 10,
+      }}
+      keyboardShouldPersistTaps="handled"
     >
       {/* <Text style={styles.pageTitle}>{item.title}</Text> */}
       {item.key === "1" ? (
@@ -420,6 +427,8 @@ export default function Explore() {
                 value={soLuongNhap}
                 onChangeText={setSoLuongNhap}
                 placeholder="Nhập số lượng"
+                returnKeyType="done"
+                onSubmitEditing={themSanPham}
               />
               {errorMessage && (
                 <Text
@@ -526,6 +535,7 @@ export default function Explore() {
             onChangeText={setSanPhamNhap}
             onSubmitEditing={() => timSanPham(sanPhamNhap)}
             placeholder="Tên sản phẩm"
+            returnKeyType="search"
           />
           {sanPhamKoTimDuoc && (
             <Text style={styles.errorMessage}>{sanPhamKoTimDuoc}</Text>
@@ -541,6 +551,8 @@ export default function Explore() {
                 value={soLuongNhap}
                 onChangeText={setSoLuongNhap}
                 placeholder="Nhập số lượng"
+                returnKeyType="done"
+                onSubmitEditing={themSanPham}
               />
               {errorMessage && (
                 <Text
@@ -567,7 +579,6 @@ export default function Explore() {
               </View>
             </View>
           )}
-
           <Text style={styles.title}>ĐƠN THANH TOÁN</Text>
           <View style={styles.table}>
             <View style={styles.row}>
@@ -650,70 +661,73 @@ export default function Explore() {
   //   extrapolate: "clamp",
   // });
   const translateX = Animated.multiply(scrollX, tabWidth / width);
-
   return (
-    <View style={{ flex: 1 }}>
-      <View style={styles.container}>
-        <StatusBar
-          barStyle="light-content"
-          backgroundColor="#4D7C0F"
-          translucent
-        />
-
-        <View style={styles.subcontainer}>
-          <UserInfoCard
-            name={userInfo.name ?? "none"}
-            role="Owner"
-            initial={userName[0]?.toUpperCase() || "A"}
-            onPress={() => console.log("User card tapped")}
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#ECFCCB" }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        <View style={styles.container}>
+          <StatusBar
+            barStyle="light-content"
+            backgroundColor="#4D7C0F"
+            translucent
           />
 
-          {/* Tabs */}
-          <View style={styles.tabContainer}>
-            {pages.map((p, index) => (
-              <TouchableOpacity
-                key={p.key}
-                style={styles.tabButton}
-                onPress={() => scrollToIndex(index)}
-              >
-                <Text style={[styles.tabText, styles.tabTextActive]}>
-                  {p.title}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.subcontainer}>
+            <UserInfoCard
+              name={userInfo.name ?? "none"}
+              role="Owner"
+              initial={userName[0]?.toUpperCase() || "A"}
+              onPress={() => console.log("User card tapped")}
+            />
+            {/* Tabs */}
+            <View style={styles.tabContainer}>
+              {pages.map((p, index) => (
+                <TouchableOpacity
+                  key={p.key}
+                  style={styles.tabButton}
+                  onPress={() => scrollToIndex(index)}
+                >
+                  <Text style={[styles.tabText, styles.tabTextActive]}>
+                    {p.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
 
-            <Animated.View
-              style={[
-                styles.underline,
-                {
-                  width: tabWidth - paddingConst,
-                  left: 0,
-                  transform: [{ translateX }],
-                },
-              ]}
+              <Animated.View
+                style={[
+                  styles.underline,
+                  {
+                    width: tabWidth - paddingConst,
+                    left: 0,
+                    transform: [{ translateX }],
+                  },
+                ]}
+              />
+            </View>
+            {/* Pages */}
+            <Animated.FlatList
+              ref={flatListRef}
+              data={pages}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => item.key}
+              renderItem={renderItem}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                { useNativeDriver: false }
+              )}
+              scrollEventThrottle={16}
+              onViewableItemsChanged={onViewRef.current}
+              viewabilityConfig={viewConfigRef.current}
             />
           </View>
-
-          {/* Pages */}
-          <Animated.FlatList
-            ref={flatListRef}
-            data={pages}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item.key}
-            renderItem={renderItem}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-              { useNativeDriver: false }
-            )}
-            scrollEventThrottle={16}
-            onViewableItemsChanged={onViewRef.current}
-            viewabilityConfig={viewConfigRef.current}
-          />
         </View>
-      </View>
-    </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

@@ -11,6 +11,7 @@ import {
   SafeAreaView,
   Platform,
   TextInput,
+  KeyboardAvoidingView,
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import Header from "@/components/ui/header";
@@ -69,74 +70,80 @@ export default function LoginScreen() {
       );
     }
   };
-
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView style={styles.container}>
-        {/* Làm trong suốt thanh trạng thái */}
-        <StatusBar
-          barStyle="light-content"
-          backgroundColor="transparent"
-          translucent
-        />
-
-        {/* Header */}
-        <Header />
-
-        <View style={styles.body}>
-          <Text style={styles.loginTitle}>Đăng nhập</Text>
-          {errorMessage ? (
-            <Text style={styles.errorMessage}>{errorMessage}</Text>
-          ) : null}
-
-          <Text style={styles.label}>Nhập tên đăng nhập</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Tên đăng nhập"
-            placeholderTextColor="#888"
-            value={name}
-            onChangeText={setName}
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#ECFCCB" }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Làm trong suốt thanh trạng thái */}
+          <StatusBar
+            barStyle="light-content"
+            backgroundColor="transparent"
+            translucent
           />
-
-          <Text style={styles.label}>Nhập mật khẩu</Text>
-          <View style={styles.passwordContainer}>
+          {/* Header */}
+          <Header />
+          <View style={styles.body}>
+            <Text style={styles.loginTitle}>Đăng nhập</Text>
+            {errorMessage ? (
+              <Text style={styles.errorMessage}>{errorMessage}</Text>
+            ) : null}
+            <Text style={styles.label}>Nhập tên đăng nhập</Text>
             <TextInput
-              style={styles.inputbtn}
-              placeholder="Mật Khẩu"
+              style={styles.input}
+              placeholder="Tên đăng nhập"
               placeholderTextColor="#888"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!passwordVisible}
+              value={name}
+              onChangeText={setName}
+              returnKeyType="next"
             />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setPasswordVisible(!passwordVisible)}
-            >
-              <Ionicons
-                name={passwordVisible ? "eye" : "eye-off"}
-                size={20}
-                color="#000"
+            <Text style={styles.label}>Nhập mật khẩu</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.inputbtn}
+                placeholder="Mật Khẩu"
+                placeholderTextColor="#888"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!passwordVisible}
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
               />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setPasswordVisible(!passwordVisible)}
+              >
+                <Ionicons
+                  name={passwordVisible ? "eye" : "eye-off"}
+                  size={20}
+                  color="#000"
+                />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity>
+              <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+              <Text style={styles.loginButtonText}>Đăng nhập</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.registerButton}
+              onPress={() => router.replace("/register")}
+            >
+              <Text style={styles.registerButtonText}>Đăng ký</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity>
-            <Text style={styles.forgotPassword}>Quên mật khẩu?</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Đăng nhập</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.registerButton}
-            onPress={() => router.replace("/register")}
-          >
-            <Text style={styles.registerButtonText}>Đăng ký</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-      {/* <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} /> */}
-    </View>
+        </ScrollView>
+        {/* <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} /> */}
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -144,6 +151,10 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#ECFCCB",
     // flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 50, // Thêm padding bottom để có space cho keyboard
   },
   loginTitle: {
     fontSize: 44,
