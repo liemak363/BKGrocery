@@ -26,6 +26,8 @@ import FeatureItem from "@/components/ui/FeatureItem";
 import * as SecureStore from "expo-secure-store";
 
 import { RootState } from "@/store/globalStore";
+import * as Sentry from '@sentry/react-native';
+
 
 export default function Explore() {
   const dispatch = useDispatch<AppDispatch>();
@@ -68,6 +70,14 @@ export default function Explore() {
     // Use navigation.navigate for tab navigation
     navigation.navigate(routeName as never);
   };
+  // const sendTestError = () => {
+  //   try {
+  //     // Gây lỗi giả lập
+  //     throw new Error('Đây là lỗi test gửi lên Sentry!');
+  //   } catch (error) {
+  //     Sentry.captureException(error);
+  //   }
+  // };
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -175,6 +185,10 @@ export default function Explore() {
               }}
             /> */}
           </View>
+          {/* <View style={{ marginTop: 50, padding: 10 }}>
+            <Button title="Gửi lỗi test lên Sentry" onPress={sendTestError} />
+          </View> */}
+
         </View>
       </ScrollView>
     </View>
