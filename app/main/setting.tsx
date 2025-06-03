@@ -77,7 +77,7 @@ export default function Explore() {
             const refreshToken = await SecureStore.getItemAsync(
               "refresh_token"
             );
-            await logout(accessToken, refreshToken || "");
+            await logout(accessToken, refreshToken ?? "");
 
             await SecureStore.deleteItemAsync("refresh_token");
             dispatch(setUserInfo({ name: "", id: 0 }));

@@ -63,8 +63,9 @@ export async function signup(name: string, password: string) {
 export async function logout(accessToken: string, refreshToken?: string) {
   try {
     let body: any = {};
+
     if (refreshToken && refreshToken !== "" && refreshToken !== null) {
-      body.refreshToken = refreshToken;
+      body.refresh_token = refreshToken;
     }
     const res = await fetch(
       `${process.env.EXPO_PUBLIC_BACKEND_URL}auth/logout`,
