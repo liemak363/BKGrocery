@@ -13,9 +13,12 @@ import {
 } from "react-native";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { useRouter, useNavigation } from "expo-router";
+import { importLog } from "@/services/import";
+import { getSaleLogs } from "@/services/sale";
 
 import { AppDispatch } from "@/store/globalStore";
 import { useDispatch, useSelector } from "react-redux";
+import { setAccessToken, setRefreshToken } from "@/store/globalReducer";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "@/components/ui/header";
@@ -30,14 +33,16 @@ import * as Sentry from '@sentry/react-native';
 
 
 export default function Explore() {
+    const { accessToken, refreshToken } = useSelector(
+      (state: RootState) => state.global
+  );
+
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const navigation = useNavigation();
 
-  const { userInfo, isSetupLoading } = useSelector(
-    (state: RootState) => state.global
-  );
-
+  const [totalItems, setTotalItems] = useState(0);
+  const [Revenue, setRevenue] = useState(0);
   const [activeTab, setActiveTab] = useState("home");
   const [userName, setUserName] = useState("none"); // Handle feature item press using tab navigation
   const handleFeaturePress = (featureName: string) => {
@@ -84,6 +89,70 @@ export default function Explore() {
       const res = await AsyncStorage.getItem("user_info");
       const userInfo = res ? JSON.parse(res) : null;
       setUserName(userInfo.name ?? "none");
+
+      const today = new Date(); 
+      const daysAgo = 7;
+
+      const pastDate = new Date(today);
+      pastDate.setDate(today.getDate() - daysAgo);
+
+      try {
+        const logs = await importLog(
+          accessToken,
+          refreshToken,
+          dispatch,
+          setAccessToken,
+          setRefreshToken,
+          null,
+          0,
+          100
+        );
+
+        // console.log(pastDate.toISOString())
+        // console.log(logs)
+      
+        setTotalItems(logs.count);
+      } catch (error: any) {
+        console.error("Error fetching import logs:", error);
+        if (error.message === "Chưa đăng nhập") {
+          if (router.canDismiss()) {
+            router.dismissAll();
+          }
+          router.replace("/login");
+          return;
+        }
+        setTotalItems(0);
+      }
+
+
+      try {
+        const logs = await getSaleLogs(
+          accessToken,
+          refreshToken,
+          dispatch,
+          setAccessToken,
+          setRefreshToken,
+          null,
+          0,
+          1000
+        );
+
+        let value = 0
+        for (const item of logs.data) {
+          value += item.total;
+        }
+        setRevenue(value)
+      } catch (error: any) {
+        console.error("Error fetching sale logs:", error);
+        if (error.message === "Chưa đăng nhập") {
+          if (router.canDismiss()) {
+            router.dismissAll();
+          }
+          router.replace("/login");
+          return;
+        }
+        setRevenue(0);
+      }
     };
     fetchUserName();
   }, []);
@@ -113,14 +182,14 @@ export default function Explore() {
 
             <View style={styles.statsRow}>
               <InfoCard
-                value="30657 $"
+                value={Revenue + ' đ'}
                 label="Total revenue"
                 onPress={() => console.log("Revenue card pressed")}
               />
 
               <InfoCard
-                value={1004}
-                label="Total item"
+                value={totalItems}
+                label="New items"
                 onPress={() => console.log("Total item card pressed")}
               />
             </View>
