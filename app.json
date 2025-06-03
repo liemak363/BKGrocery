@@ -4,7 +4,7 @@
     "slug": "BKGrocery",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icon_main.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,9 +13,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon_main.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.applucqua.BKGrocery"
     },
     "web": {
       "bundler": "metro",
@@ -41,7 +46,6 @@
           "recordAudioAndroid": true
         }
       ],
-      "expo-barcode-scanner",
       "expo-font",
       "expo-web-browser",
       "expo-secure-store",
@@ -55,7 +59,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "5b9c0a70-2860-42c1-83a4-fd12d2daa50d"
+        "projectId": "7c773c27-84d1-46d4-9300-484bc627d7e1"
       }
     },
     "runtimeVersion": {
