@@ -66,9 +66,19 @@ const SalesHistoryScreen = () => {
     // Keep lastTime as Vietnam time without timezone conversion
     let lastTimeInput = lastTime.trim() || null;
 
-    // If user provided time, treat it as Vietnam timezone
+    // If user provided date, convert it to proper datetime format with Vietnam timezone
     if (lastTimeInput) {
-      lastTimeInput = lastTimeInput + "+07:00";
+      // Check if input is just a date (YYYY-MM-DD format)
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (dateRegex.test(lastTimeInput)) {
+        // Convert date to start of day in Vietnam timezone
+        lastTimeInput = lastTimeInput + "T00:00:00+07:00";
+      } else {
+        // If it's already a datetime string, just add timezone if not present
+        if (!lastTimeInput.includes("+") && !lastTimeInput.includes("Z")) {
+          lastTimeInput = lastTimeInput + "+07:00";
+        }
+      }
     }
 
     setIsLoading(true);
@@ -157,7 +167,7 @@ const SalesHistoryScreen = () => {
 
             <View style={styles.searchBox}>
               <TextInput
-                placeholder="Ngày giờ (YYYY-MM-DD HH:mm)"
+                placeholder="Ngày giờ YYYY-MM-DD HH:mm lọc trước đó"
                 value={lastTime}
                 onChangeText={setLastTime}
                 style={styles.searchInput}
