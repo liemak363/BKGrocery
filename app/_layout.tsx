@@ -14,13 +14,15 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 
 import { store } from "../store/globalStore";
 import { Provider } from "react-redux";
-import * as Sentry from '@sentry/react-native';
+import * as Sentry from "@sentry/react-native";
 
 Sentry.init({
   dsn: "https://41b7c846fbc2d3ed0407badfcb28edd5@o4509428717060096.ingest.us.sentry.io/4509428718632960",
   enableInExpoDevelopment: true,
-  debug: true,
+  // debug: true,
+  sendDefaultPii: true,
   tracesSampleRate: 1.0,
+  profilesSampleRate: 1.0,
 });
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.

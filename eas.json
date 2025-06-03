@@ -20,6 +20,11 @@
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://prod.example.com/"
       }
+    },
+    "preview1": {
+      "android": {
+        "buildType": "apk"
+      }
     }
   },
   "submit": {
