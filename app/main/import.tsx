@@ -191,6 +191,10 @@ export default function ImportScreen() {
         createdAt: new Date().toISOString(),
       };
 
+      if (description.trim()) {
+        importData.description = description.trim();
+      }
+
       await submitImport(importData);
     }
   };
